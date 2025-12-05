@@ -1,4 +1,4 @@
-const API_BASE = window.__API_BASE__ || '/api'
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 const getToken = () => localStorage.getItem('admin_token')
 
