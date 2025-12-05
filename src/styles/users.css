@@ -1,0 +1,41 @@
+/* General Input Field (reused from Modal) */
+.input-field {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-size: 16px;
+}
+.input-field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    outline: none;
+}
+
+/* Subscription Tag Styling */
+.subscription-tag {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap; /* <--- THÊM DÒNG NÀY: Chống xuống dòng */
+    display: inline-block;
+}
+.subscription-free {
+    background-color: #f3f4f6; /* Gray 100 */
+    color: #4b5563; /* Gray 600 */
+}
+.subscription-premium {
+    background-color: #fef3c7; /* Amber 100 */
+    color: #b45309; /* Amber 700 */
+}
+
+/* Table Row Hover */
+.users-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Action Button Hover */
+.actions-cell .action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}

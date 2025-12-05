@@ -1,0 +1,126 @@
+/* ========================================= */
+/* TABLE COMPONENT STYLES                    */
+/* Base styles defined in components.css     */
+/* ========================================= */
+
+/* Additional table-specific styles */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* Cố định độ rộng cột */
+}
+
+.table th {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 2px solid var(--border-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-dark);
+  background: var(--bg-light);
+}
+
+.table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+  
+  /* QUAN TRỌNG: Xử lý nội dung dài (như Email) */
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.table tbody tr {
+  transition: all var(--transition-base) var(--ease-smooth);
+}
+
+.table tbody tr:hover {
+  background: linear-gradient(90deg, rgba(26, 115, 232, 0.03) 0%, rgba(26, 115, 232, 0.01) 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table button {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  font-size: var(--font-size-sm);
+}
+
+.table button:hover {
+  background: var(--bg-lighter);
+  border-color: var(--secondary-color);
+  color: var(--secondary-color);
+}
+
+.table ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.table li {
+  margin-bottom: 4px;
+}
+
+/* Responsive Table Wrapper */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: normal; /* Cho phép xuống dòng trên desktop */
+}
+
+/* Chỉ bắt buộc không xuống dòng trên mobile để kích hoạt cuộn ngang */
+@media (max-width: 768px) {
+  .table {
+    white-space: nowrap;
+  }
+}
+
+.table th, .table td {
+  padding: 16px;
+  vertical-align: middle;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .table {
+    white-space: nowrap;
+    table-layout: fixed; /* Đảm bảo max-width có tác dụng */
+  }
+  
+  .table th, 
+  .table td {
+    padding: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Giới hạn chiều rộng để hiện dấu ... */
+  }
+  
+  /* Cột hành động không nên bị cắt */
+  .table td:last-child {
+    max-width: none;
+    overflow: visible;
+  }
+}
