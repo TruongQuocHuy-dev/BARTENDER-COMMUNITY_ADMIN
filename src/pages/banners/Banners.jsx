@@ -27,7 +27,7 @@ const StatusBadge = ({ status }) => {
       gap: '4px'
     }}>
       <Icon size={14} />
-      {isActive ? 'Active' : 'Inactive'}
+      {isActive ? 'Hoạt động' : 'Không hoạt động'}
     </span>
   );
 };
@@ -49,7 +49,7 @@ function DetailModal({ item, onClose }) {
       <div className="modal-grid">
         <DetailItem label="Link liên kết" value={item.link} />
         <DetailItem label="Lượt xem" value={item.views} />
-        <DetailItem label="Trạng thái" value={item.status} />
+        <DetailItem label="Trạng thái" value={item.status === 'active' ? 'Hoạt động' : 'Không hoạt động'} />
         <DetailItem label="Ưu tiên" value={item.priority} />
       </div>
 
@@ -113,15 +113,28 @@ export default function Banners() {
         )} />
 
       {/* --- Search Bar --- */}
-      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-md mb-6" style={{ display: 'flex', gap: 10 }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <FiSearch size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100"
+        style={{
+          display: 'flex',
+          width: '100%',
+          alignItems: 'center'
+        }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+          <FiSearch size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', zIndex: 1 }} />
           <input
             placeholder="Tìm kiếm banner theo tiêu đề..."
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="input-field"
-            style={{ flex: 1, padding: '10px 12px 10px 40px' }}
+            style={{
+              paddingLeft: 40,
+              width: '100%',
+              height: 42,
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
           />
         </div>
       </div>

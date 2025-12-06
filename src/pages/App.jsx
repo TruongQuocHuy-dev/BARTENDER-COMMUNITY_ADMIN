@@ -18,6 +18,7 @@ import Banners from "./banners/Banners"
 import Posts from "./posts/Posts"
 import Reports from "./reports/Reports"
 import PaymentMethods from "./payment-methods/PaymentMethods"
+import Profile from "./profile/Profile"
 import Login from "./auth/Login"
 import Header from "../components/Header"
 import Sidebar from "../components/SideBar"
@@ -90,6 +91,7 @@ export default function App() {
         <Route path="/posts" element={<ProtectedLayout><Posts /></ProtectedLayout>} />
         <Route path="/reports" element={<ProtectedLayout><Reports /></ProtectedLayout>} />
         <Route path="/payment-methods" element={<ProtectedLayout><PaymentMethods /></ProtectedLayout>} />
+        <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
       </Routes>
     </AuthProvider>
   )

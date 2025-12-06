@@ -2,12 +2,13 @@ import React, { useState } from 'react'
 import api from '../../api/client'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { AlertCircle, Coffee } from 'lucide-react'
+import { AlertCircle, Coffee, Eye, EyeOff } from 'lucide-react'
 import '../../styles/login.css'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [err, setErr] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
@@ -17,7 +18,7 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault()
     if (!email || !password) {
-      setErr('Please enter both email and password')
+      setErr('Vui lòng nhập cả email và mật khẩu')
       return
     }
 
@@ -33,7 +34,7 @@ export default function Login() {
 
       // 3. VẪN GIỮ: Kiểm tra quyền admin
       if (!user || user.role !== 'admin') {
-        setErr('You do not have permission to access the admin panel.');
+        setErr('Bạn không có quyền truy cập trang quản trị.');
         setIsLoading(false); // Đảm bảo dừng loading
         return;
       }
@@ -46,7 +47,9 @@ export default function Login() {
 
     } catch (e) {
       console.error(e)
-      const message = e.response?.data?.message || 'Invalid email or password'
+      const message = e.response?.data?.message === 'Invalid email or password'
+        ? 'Email hoặc mật khẩu không đúng'
+        : (e.response?.data?.message || 'Đăng nhập thất bại')
       setErr(message)
     } finally {
       // Sẽ chạy ngay cả khi bạn 'return' ở (3)
@@ -61,34 +64,44 @@ export default function Login() {
           <div className="login-logo">
             <Coffee size={32} />
           </div>
-          <h1>Welcome Back</h1>
+          <h1>Chào mừng trở lại</h1>
         </div>
 
         <form onSubmit={submit} className="login-form">
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">Địa chỉ Email</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              placeholder="Nhập email của bạn"
               required
               autoComplete="email"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-              autoComplete="current-password"
-            />
+            <label htmlFor="password">Mật khẩu</label>
+            <div className="password-input-wrapper">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Nhập mật khẩu của bạn"
+                required
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex="-1"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <button
@@ -96,7 +109,7 @@ export default function Login() {
             className="login-button"
             disabled={isLoading}
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
 
           {err && (

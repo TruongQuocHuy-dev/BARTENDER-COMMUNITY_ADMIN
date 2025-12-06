@@ -53,10 +53,10 @@ const DetailItem = ({ label, value }) => (
 function DetailModal({ item, onClose }) {
   if (!item) return null
   return (
-    <Modal isOpen={!!item} onClose={onClose} title={item.name} size="small" subtitle={`${item.tier} • ${item.billingCycle}`}>
+    <Modal isOpen={!!item} onClose={onClose} title={item.name} size="small" subtitle={`${item.tier === 'premium' ? 'Cao cấp' : item.tier === 'free' ? 'Miễn phí' : item.tier} • ${item.billingCycle === 'monthly' ? 'Hàng tháng' : item.billingCycle === 'yearly' ? 'Hàng năm' : item.billingCycle}`}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-        <div style={{ width: '48%' }}><DetailItem label="Tier" value={item.tier} /></div>
-        <div style={{ width: '48%' }}><DetailItem label="Chu kỳ" value={item.billingCycle} /></div>
+        <div style={{ width: '48%' }}><DetailItem label="Hạng" value={item.tier === 'premium' ? 'Cao cấp' : item.tier === 'free' ? 'Miễn phí' : item.tier} /></div>
+        <div style={{ width: '48%' }}><DetailItem label="Chu kỳ" value={item.billingCycle === 'monthly' ? 'Hàng tháng' : item.billingCycle === 'yearly' ? 'Hàng năm' : item.billingCycle} /></div>
         <div style={{ width: '48%' }}><DetailItem label="Giá" value={formatCurrency(item.price, item.currency)} /></div>
         <div style={{ width: '48%' }}><DetailItem label="Độ Phổ biến" value={<PopularBadge isPopular={item.popularPlan} />} /></div>
       </div>
@@ -125,8 +125,8 @@ function EditPlanModal({ plan, onClose, onSaved }) {
           <div className="modal-form-group" style={{ flex: 1 }}>
             <label className="form-label">Tier</label>
             <select value={form.tier || 'premium'} onChange={e => setForm({ ...form, tier: e.target.value })} className="form-input">
-              <option value="free">Free</option>
-              <option value="premium">Premium</option>
+              <option value="free">Miễn phí</option>
+              <option value="premium">Cao cấp</option>
             </select>
           </div>
           <div className="modal-form-group" style={{ flex: 1 }}>
@@ -194,6 +194,7 @@ export default function PaymentMethods() {
   const [detail, setDetail] = useState(null)
   const [editing, setEditing] = useState(null)
   const [loading, setLoading] = useState(false);
+  const [tierFilter, setTierFilter] = useState('all')
 
   useEffect(() => { load() }, [])
   const load = async () => {
@@ -217,10 +218,12 @@ export default function PaymentMethods() {
     }
   }
 
-  const filtered = useMemo(() => items.filter(p =>
-    (`${p.name} ${p.tier} ${p.billingCycle}`.toLowerCase())
-      .includes(query.toLowerCase())
-  ), [items, query]);
+  const filtered = useMemo(() => items.filter(p => {
+    const matchesQuery = (`${p.name} ${p.tier} ${p.billingCycle}`.toLowerCase())
+      .includes(query.toLowerCase());
+    const matchesTier = tierFilter === 'all' || p.tier === tierFilter;
+    return matchesQuery && matchesTier;
+  }), [items, query, tierFilter]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -233,16 +236,55 @@ export default function PaymentMethods() {
           </button>
         )} />
 
-      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-md mb-6">
-        <div style={{ position: 'relative', flex: 1 }}>
-          <FiSearch size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100"
+        style={{
+          display: 'flex',
+          width: '100%',
+          gap: 12,
+          alignItems: 'center'
+        }}>
+        {/* Search */}
+        <div style={{ position: 'relative', flex: 3, minWidth: 0 }}>
+          <FiSearch size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', zIndex: 1 }} />
           <input
             placeholder="Tìm kiếm theo tên, tier, chu kỳ..."
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="input-field"
-            style={{ paddingLeft: 40 }}
+            style={{
+              paddingLeft: 40,
+              width: '100%',
+              height: 42,
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
           />
+        </div>
+
+        {/* Filter Tier */}
+        <div style={{ position: 'relative', flex: 1, minWidth: 160 }}>
+          <select
+            value={tierFilter}
+            onChange={e => setTierFilter(e.target.value)}
+            className="input-field"
+            style={{
+              width: '100%',
+              height: 42,
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              cursor: 'pointer',
+              outline: 'none',
+              boxSizing: 'border-box',
+              paddingLeft: 12,
+              paddingRight: 32
+            }}
+          >
+            <option value="all">Tất cả Tier</option>
+            <option value="free">Miễn phí</option>
+            <option value="premium">Cao cấp</option>
+          </select>
         </div>
       </div>
 
@@ -262,7 +304,7 @@ export default function PaymentMethods() {
               <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                 {/* SỬA ĐỔI: Phân chia width % để bảng đầy đặn */}
                 <th style={{ ...tableHeaderStyle, width: '25%' }}>Tên Gói</th>
-                <th style={{ ...tableHeaderStyle, width: '15%' }}>Tier</th>
+                <th style={{ ...tableHeaderStyle, width: '15%' }}>Hạng</th>
                 <th style={{ ...tableHeaderStyle, width: '15%' }}>Chu kỳ</th>
                 <th style={{ ...tableHeaderStyle, width: '15%' }}>Giá</th>
                 <th style={{ ...tableHeaderStyle, width: '15%' }}>Phổ biến</th>
@@ -280,10 +322,10 @@ export default function PaymentMethods() {
                       backgroundColor: p.tier === 'premium' ? '#ede9fe' : '#f3f4f6',
                       color: p.tier === 'premium' ? '#6d28d9' : '#4b5563'
                     }}>
-                      {p.tier}
+                      {p.tier === 'premium' ? 'Cao cấp' : p.tier === 'free' ? 'Miễn phí' : p.tier}
                     </span>
                   </td>
-                  <td style={tableCellStyle}>{p.billingCycle}</td>
+                  <td style={tableCellStyle}>{p.billingCycle === 'monthly' ? 'Hàng tháng' : p.billingCycle === 'yearly' ? 'Hàng năm' : p.billingCycle}</td>
                   <td style={{ ...tableCellStyle, fontWeight: 'bold', color: '#059669' }}>
                     {formatCurrency(p.price, p.currency)}
                   </td>

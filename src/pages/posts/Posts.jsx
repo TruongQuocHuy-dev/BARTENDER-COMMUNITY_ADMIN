@@ -183,7 +183,7 @@ export default function Posts() {
                 <th style={tableHeaderStyle}>Tác giả</th>
                 <th style={tableHeaderStyle}>Hình ảnh</th>
                 <th style={tableHeaderStyle}>Video</th>
-                <th style={tableHeaderStyle}>Lượt thích</th>
+
                 <th style={{ ...tableHeaderStyle, width: 120, textAlign: 'center' }}>Hành động</th>
               </tr>
             </thead>
@@ -212,12 +212,7 @@ export default function Posts() {
                       <span style={{ color: '#9ca3af' }}>-</span>
                     )}
                   </td>
-                  <td style={tableCellStyle}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#ef4444' }}>
-                      <FiHeart size={14} />
-                      <span style={{ fontWeight: 600 }}>{p.likes?.length || 0}</span>
-                    </div>
-                  </td>
+
                   <td style={{ ...tableCellStyle, textAlign: 'center' }}>
                     <TableActionMenu
                       onView={() => setDetail(p)}

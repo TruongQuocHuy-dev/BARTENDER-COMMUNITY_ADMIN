@@ -39,7 +39,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
     {
       title: "Tổng quan",
       items: [
-        { path: "/", label: "Dashboard", icon: LayoutDashboard },
+        { path: "/", label: "Bảng điều khiển", icon: LayoutDashboard },
       ],
     },
     {

@@ -39,7 +39,7 @@ function DetailModal({ item, onClose }) {
                     <DetailTag label="Trạng thái" value={item.status} color={getStatusColor(item.status)} />
                     <DetailTag label="Danh mục" value={item.category} icon={Utensils} />
                     <DetailTag label="Độ khó" value={item.difficulty} color={getDifficultyColor(item.difficulty)} icon={FiClock} />
-                    <DetailTag label="Loại" value={item.isPremium ? 'Premium' : 'Free'} icon={Zap} color={item.isPremium ? '#f59e0b' : '#374151'} />
+                    <DetailTag label="Loại" value={item.isPremium ? 'Cao cấp' : 'Miễn phí'} icon={Zap} color={item.isPremium ? '#f59e0b' : '#374151'} />
                     <DetailTag label="Đánh giá" value={`${item.rating || 0}/5 (${item.reviewCount || 0} lượt)`} icon={Star} color="#f59e0b" />
                 </div>
 
@@ -320,9 +320,9 @@ export default function Recipes() {
                         className="input-field"
                         style={{ minWidth: 140, flex: 1, height: 42, borderRadius: 8, cursor: 'pointer' }}
                     >
-                        <option value="all">💎 Tất cả Loại</option>
+                        <option value="all">Tất cả Loại</option>
                         <option value="free">Miễn phí</option>
-                        <option value="premium">Premium</option>
+                        <option value="premium">Cao cấp</option>
                     </select>
                 </div>
 
@@ -404,8 +404,8 @@ export default function Recipes() {
 
                                             <td style={tableCellStyle}>
                                                 {r.isPremium ?
-                                                    <span style={{ color: '#b45309', background: '#fffbeb', padding: '2px 6px', borderRadius: 4, border: '1px solid #fcd34d', fontSize: 11, fontWeight: 600 }}>PREMIUM</span>
-                                                    : <span style={{ color: '#374151', fontSize: 12 }}>Free</span>
+                                                    <span style={{ color: '#b45309', background: '#fffbeb', padding: '2px 6px', borderRadius: 4, border: '1px solid #fcd34d', fontSize: 11, fontWeight: 600 }}>CAO CẤP</span>
+                                                    : <span style={{ color: '#374151', fontSize: 12 }}>Miễn phí</span>
                                                 }
                                             </td>
 

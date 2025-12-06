@@ -38,7 +38,7 @@ const FILTER_OPTIONS = {
     label: 'Gói dịch vụ',
     options: [
       { value: 'free', label: 'Miễn phí', icon: <FiUser size={14} /> },
-      { value: 'premium', label: 'Premium', icon: <FaCrown size={14} style={{ color: '#f59e0b' }} /> } // ĐÃ SỬA: FiCrown -> FaCrown
+      { value: 'premium', label: 'Cao cấp', icon: <FaCrown size={14} style={{ color: '#f59e0b' }} /> } // ĐÃ SỬA: FiCrown -> FaCrown
     ]
   }
 }
@@ -353,17 +353,19 @@ export default function Users() {
                   <td style={tableCellStyle} className="text-gray-600">{u.email}</td>
                   <td style={tableCellStyle}>
                     <span className={`subscription-tag subscription-${u.subscription?.tier || 'free'}`}>
-                      {u.subscription?.tier === 'premium' ? `Premium (${u.subscription.planId})` : 'Miễn phí'}
+                      {u.subscription?.tier === 'premium'
+                        ? `Cao cấp ${u.subscription.planId?.includes('yearly') ? '(Năm)' : u.subscription.planId?.includes('monthly') ? '(Tháng)' : ''}`
+                        : 'Miễn phí'}
                     </span>
                     {u.subscription?.endDate && (
-                      <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: 4 }}>
                         Hết hạn: {new Date(u.subscription.endDate).toLocaleDateString('vi-VN')}
                       </div>
                     )}
                   </td>
                   <td style={tableCellStyle}>
-                    <span style={{ textTransform: 'capitalize', fontWeight: 600, color: u.role === 'admin' ? '#ef4444' : '#374151' }}>
-                      {u.role || 'user'}
+                    <span style={{ fontWeight: 600, color: u.role === 'admin' ? '#ef4444' : '#374151' }}>
+                      {u.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
                     </span>
                   </td>
                   <td style={tableCellStyle}>

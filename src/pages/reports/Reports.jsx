@@ -308,12 +308,12 @@ export default function ReportsAndSupport() {
             <table className="table reports-table">
               <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                 <tr>
-                  <th style={tableHeaderStyle}>Loại phiếu</th>
-                  <th style={{ ...tableHeaderStyle, width: '40%' }}>Nội dung / Tiêu đề</th>
-                  <th style={tableHeaderStyle}>Người gửi</th>
-                  <th style={tableHeaderStyle}>Ngày gửi</th>
-                  <th style={tableHeaderStyle}>Trạng thái</th>
-                  <th style={{ ...tableHeaderStyle, textAlign: 'center' }}>Chi tiết</th>
+                  <th style={{ ...tableHeaderStyle, width: '12%' }}>Loại phiếu</th>
+                  <th style={{ ...tableHeaderStyle, width: '30%' }}>Nội dung / Tiêu đề</th>
+                  <th style={{ ...tableHeaderStyle, width: '20%' }}>Người gửi</th>
+                  <th style={{ ...tableHeaderStyle, width: '15%' }}>Ngày gửi</th>
+                  <th style={{ ...tableHeaderStyle, width: '13%' }}>Trạng thái</th>
+                  <th style={{ ...tableHeaderStyle, textAlign: 'center', width: '10%' }}>Chi tiết</th>
                 </tr>
               </thead>
               <tbody>

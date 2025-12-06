@@ -157,7 +157,7 @@ export default function Dashboard() {
         <div className="dashboard-container">
             {/* Header */}
             <div className="dashboard-title-section">
-                <h1>DASHBOARD</h1>
+                <h1>BẢNG ĐIỀU KHIỂN</h1>
                 <p>Tổng quan số liệu ngày {new Date().toLocaleDateString('vi-VN')}</p>
             </div>
 

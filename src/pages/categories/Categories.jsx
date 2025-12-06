@@ -269,15 +269,13 @@ export default function Categories() {
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState(null)
   const [detail, setDetail] = useState(null)
-  const [filterStatus, setFilterStatus] = useState('all')
 
   useEffect(() => { load() }, [])
   const load = async () => { try { setCats(await api.get('/categories')) } catch (e) { console.error(e) } }
 
   const filteredCats = cats.filter(cat => {
     const matchesQuery = cat.name.toLowerCase().includes(query.toLowerCase())
-    if (filterStatus === 'all') return matchesQuery
-    return matchesQuery && cat.status === filterStatus
+    return matchesQuery
   })
 
   const remove = async (id) => {
@@ -298,10 +296,17 @@ export default function Categories() {
         )}
       />
 
-      {/* Modern Search & Filter Bar */}
-      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-md mb-6" style={{ border: '1px solid rgba(0, 0, 0, 0.05)' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
-          <FiSearch size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', zIndex: 1 }} />
+      {/* Modern Search Bar */}
+      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100"
+        style={{
+          display: 'flex',
+          width: '100%',
+          alignItems: 'center'
+        }}>
+
+        {/* Search Box */}
+        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+          <FiSearch size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', zIndex: 1 }} />
           <input
             type="text"
             placeholder="Tìm kiếm danh mục..."
@@ -309,34 +314,16 @@ export default function Categories() {
             onChange={e => setQuery(e.target.value)}
             className="input-field"
             style={{
+              paddingLeft: 40,
               width: '100%',
-              paddingLeft: 44,
-              height: 44,
-              border: '1.5px solid #e5e7eb',
+              height: 42,
+              border: '1px solid #e5e7eb',
               borderRadius: 8,
-              transition: 'all 0.2s',
-              fontSize: 14
+              outline: 'none',
+              boxSizing: 'border-box'
             }}
           />
         </div>
-
-        <select
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-          className="input-field"
-          style={{
-            minWidth: 160,
-            height: 44,
-            border: '1.5px solid #e5e7eb',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontSize: 14
-          }}
-        >
-          <option value="all">Tất cả trạng thái</option>
-          <option value="active">Hoạt động</option>
-          <option value="inactive">Không hoạt động</option>
-        </select>
       </div>
 
       {/* Modern Table */}
