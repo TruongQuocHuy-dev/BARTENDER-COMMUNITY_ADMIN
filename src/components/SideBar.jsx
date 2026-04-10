@@ -10,6 +10,7 @@ import {
 export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(false)
+  const shouldCollapse = collapsed && !isMobileOpen
 
   // Load trạng thái collapsed từ localStorage
   useEffect(() => {
@@ -74,16 +75,17 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
         onClick={() => setIsMobileOpen && setIsMobileOpen(false)}
       ></div>
 
-      <aside className={`electro-sidebar ${collapsed ? "collapsed" : ""} ${isMobileOpen ? "mobile-open" : ""}`}>
+      <aside className={`electro-sidebar ${shouldCollapse ? "collapsed" : ""} ${isMobileOpen ? "mobile-open" : ""}`}>
         {/* Header Logo */}
         <div className="sidebar-header">
-          <Link to="/" className="brand-logo">
-            <div className="logo-icon">
-              <Coffee size={20} strokeWidth={2.0} />
-            </div>
-            {/* Hiển thị chữ khi (không thu gọn) HOẶC (đang mở trên mobile) */}
-            {(!collapsed || isMobileOpen) && <span>Bartender Admin</span>}
-          </Link>
+          {!shouldCollapse && (
+            <Link to="/" className="brand-logo">
+              <div className="logo-icon">
+                <Coffee size={20} strokeWidth={2.0} />
+              </div>
+              <span>Admin</span>
+            </Link>
+          )}
 
           {/* Nút thu gọn cho Desktop */}
           <button
@@ -91,6 +93,14 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
             onClick={() => setCollapsed(!collapsed)}
           >
             {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          </button>
+
+          <button
+            className="mobile-close-btn"
+            onClick={() => setIsMobileOpen && setIsMobileOpen(false)}
+            aria-label="Dong menu"
+          >
+            <X size={18} />
           </button>
         </div>
 
@@ -111,7 +121,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
                     key={item.path}
                     to={item.path}
                     className={`sidebar-item ${active ? "active" : ""}`}
-                    title={collapsed ? item.label : ""}
+                    title={shouldCollapse ? item.label : ""}
                   >
                     <span className="sidebar-icon">
                       <Icon size={20} strokeWidth={active ? 2.5 : 2} />

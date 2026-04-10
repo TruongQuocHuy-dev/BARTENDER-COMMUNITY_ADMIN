@@ -7,12 +7,21 @@
 /* MAIN LAYOUT STRUCTURE                     */
 /* ========================================= */
 
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* Container chính - Khóa chặt scroll của cả trang */
 .electro-layout {
   display: flex;
   flex-direction: row;
   height: 100vh;
   width: 100%;
+  max-width: 100%;
   overflow: hidden; /* Cắt bỏ mọi phần tử con cố tình tràn ra ngoài */
   background-color: var(--bg-body);
 }
@@ -61,7 +70,7 @@
 .electro-content {
   flex: 1;
   overflow-y: auto; /* Cho phép cuộn dọc nội dung */
-  /* overflow-x: hidden; REMOVED: Cho phép trình duyệt tự xử lý nếu cần thiết */
+  overflow-x: hidden;
   padding: 20px;
   scroll-behavior: smooth;
   position: relative;

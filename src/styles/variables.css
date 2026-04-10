@@ -10,49 +10,49 @@
   --header-height: 70px;
   
   /* === COLORS - Background === */
-  --bg-body: #f3f4f6;
-  --bg-white: #ffffff;
-  --bg-light: #f8fafc;
-  --bg-lighter: #f9fafb;
-  --bg-dark: #1f2937;
+  --bg-body: var(--theme-bg-body, #f3f4f6);
+  --bg-white: var(--theme-bg-white, #ffffff);
+  --bg-light: var(--theme-bg-light, #f8fafc);
+  --bg-lighter: var(--theme-bg-lighter, #f9fafb);
+  --bg-dark: var(--theme-bg-dark, #1f2937);
   
   /* === COLORS - Text === */
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-  --text-tertiary: #9ca3af;
-  --text-dark: #111827;
-  --text-light: #94a3b8;
+  --text-primary: var(--theme-text-primary, #1f2937);
+  --text-secondary: var(--theme-text-secondary, #6b7280);
+  --text-tertiary: var(--theme-text-tertiary, #9ca3af);
+  --text-dark: var(--theme-text-dark, #111827);
+  --text-light: var(--theme-text-light, #94a3b8);
   
   /* === COLORS - Primary Brand === */
-  --primary-color: #4f46e5;
-  --primary-light: #e0e7ff;
-  --primary-dark: #4338ca;
-  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --primary-color: var(--theme-primary, #4f46e5);
+  --primary-light: var(--theme-primary-light, #e0e7ff);
+  --primary-dark: var(--theme-primary-dark, #4338ca);
+  --primary-gradient: var(--theme-primary-gradient, linear-gradient(135deg, #6366f1 0%, #a855f7 100%));
   
   /* === COLORS - Secondary === */
-  --secondary-color: #1a73e8;
-  --secondary-dark: #1557b0;
-  --secondary-light: #f0f7ff;
+  --secondary-color: var(--theme-secondary, #1a73e8);
+  --secondary-dark: var(--theme-secondary-dark, #1557b0);
+  --secondary-light: var(--theme-secondary-light, #f0f7ff);
   
   /* === COLORS - Status === */
-  --success-color: #10b981;
-  --success-light: #e6f4ea;
-  --success-dark: #059669;
+  --success-color: var(--theme-success, #10b981);
+  --success-light: var(--theme-success-light, #e6f4ea);
+  --success-dark: var(--theme-success-dark, #059669);
   
-  --danger-color: #ef4444;
-  --danger-light: #fce8e6;
-  --danger-dark: #dc2626;
+  --danger-color: var(--theme-danger, #ef4444);
+  --danger-light: var(--theme-danger-light, #fce8e6);
+  --danger-dark: var(--theme-danger-dark, #dc2626);
   
-  --warning-color: #f59e0b;
-  --warning-light: #fef3c7;
+  --warning-color: var(--theme-warning, #f59e0b);
+  --warning-light: var(--theme-warning-light, #fef3c7);
   
-  --info-color: #3b82f6;
-  --info-light: #dbeafe;
+  --info-color: var(--theme-info, #3b82f6);
+  --info-light: var(--theme-info-light, #dbeafe);
   
   /* === COLORS - Borders === */
-  --border-color: #e5e7eb;
-  --border-light: #f3f4f6;
-  --border-dark: #d1d5db;
+  --border-color: var(--theme-border, #e5e7eb);
+  --border-light: var(--theme-border-light, #f3f4f6);
+  --border-dark: var(--theme-border-dark, #d1d5db);
   
   /* === MODERN GRADIENTS === */
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
