@@ -1,7 +1,7 @@
-﻿import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
-  LogOut, User, ChevronDown, Menu
+  LogOut, User, ChevronDown, Menu, Bell, Settings
 } from "lucide-react"
 
 export default function Header({ user, onLogout, onToggleMobileMenu }) {
@@ -22,23 +22,27 @@ export default function Header({ user, onLogout, onToggleMobileMenu }) {
   }, [])
 
   const getInitials = (name) => {
-    if (!name) return "A";
-    return name.charAt(0).toUpperCase();
+    if (!name) return "A"
+    return name.charAt(0).toUpperCase()
   }
 
   return (
     <header className="electro-header">
       <div className="header-left">
-        {/* Mobile Menu Button - Shown only on mobile via CSS */}
         <button
           className="action-btn mobile-menu-btn"
           onClick={onToggleMobileMenu}
         >
-          <Menu size={24} />
+          <Menu size={22} />
         </button>
       </div>
 
       <div className="header-right">
+        <button className="action-btn notification-btn" aria-label="Thong bao">
+          <Bell size={20} />
+          <span className="notification-badge"></span>
+        </button>
+
         <div className="user-menu-container" ref={dropdownRef}>
           <button
             className="user-button"
@@ -53,7 +57,7 @@ export default function Header({ user, onLogout, onToggleMobileMenu }) {
               {getInitials(user?.fullName)}
             </div>
 
-            <ChevronDown size={16} color="#9ca3af" />
+            <ChevronDown size={16} className={`chevron-icon ${showUserMenu ? 'rotated' : ''}`} />
           </button>
 
           {showUserMenu && (
@@ -66,6 +70,15 @@ export default function Header({ user, onLogout, onToggleMobileMenu }) {
                 }}
               >
                 <User size={16} /> Hồ sơ cá nhân
+              </div>
+              <div
+                className="dropdown-item"
+                onClick={() => {
+                  navigate("/settings")
+                  setShowUserMenu(false)
+                }}
+              >
+                <Settings size={16} /> Cài đặt
               </div>
 
               <div className="dropdown-divider"></div>
@@ -86,4 +99,3 @@ export default function Header({ user, onLogout, onToggleMobileMenu }) {
     </header>
   )
 }
-

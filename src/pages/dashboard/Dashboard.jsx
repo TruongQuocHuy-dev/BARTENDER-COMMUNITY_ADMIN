@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { AlertCircle, Image as ImageIcon, Loader2, Users, Utensils } from 'lucide-react'
+import { AlertCircle, Image as ImageIcon, Loader2, Users, Utensils, Calendar } from 'lucide-react'
 import api from '../../api/client'
 import StatCard from '../../components/dashboard/StatCard'
 import RevenueChartCard from '../../components/dashboard/RevenueChartCard'
@@ -25,11 +25,18 @@ const RevenueTooltip = ({ active, payload, label }) => {
 
   return (
     <div className="dashboard-tooltip">
-      <p>{label}</p>
-      <span>{formatCurrency(payload[0].value)}</span>
+      <p className="tooltip-label">{label}</p>
+      <span className="tooltip-value">{formatCurrency(payload[0].value)}</span>
     </div>
   )
 }
+
+const StatCardData = [
+  { key: 'users', label: 'Nguoi dung', icon: Users, toneClass: 'tone-rose', iconClass: 'tone-rose-icon', color: '#f35f87', bgColor: 'rgba(243, 95, 135, 0.08)' },
+  { key: 'recipes', label: 'Cong thuc', icon: Utensils, toneClass: 'tone-cyan', iconClass: 'tone-cyan-icon', color: '#11a6cb', bgColor: 'rgba(17, 166, 203, 0.08)' },
+  { key: 'banners', label: 'Quang cao', icon: ImageIcon, toneClass: 'tone-orange', iconClass: 'tone-orange-icon', color: '#ff8f66', bgColor: 'rgba(255, 143, 102, 0.08)' },
+  { key: 'reports', label: 'Cho xu ly', icon: AlertCircle, toneClass: 'tone-purple', iconClass: 'tone-purple-icon', color: '#9d67ea', bgColor: 'rgba(157, 103, 234, 0.08)' },
+]
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
@@ -91,16 +98,31 @@ export default function Dashboard() {
   const currentYear = new Date().getFullYear()
   const years = [currentYear, currentYear - 1, currentYear - 2]
 
+  const today = new Date().toLocaleDateString('vi-VN', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+
   if (loading && !stats) {
     return (
       <div className="dashboard-page-loader">
-        <Loader2 className="dashboard-spinner" size={32} />
+        <div className="loader-content">
+          <Loader2 className="dashboard-spinner" size={40} />
+          <p>Đang tải dữ liệu...</p>
+        </div>
       </div>
     )
   }
 
   if (error) {
-    return <div className="dashboard-error-state">{error}</div>
+    return (
+      <div className="dashboard-error-state">
+        <AlertCircle size={20} />
+        <span>{error}</span>
+      </div>
+    )
   }
 
   const counts = stats?.counts || {
@@ -111,20 +133,50 @@ export default function Dashboard() {
     reportsResolved: 0,
     totalRevenue: 0,
   }
+
+  const statValues = {
+    users: counts.userCount,
+    recipes: counts.recipeCount,
+    banners: counts.bannerCount,
+    reports: counts.reportsPending,
+  }
+
   const recentUsers = stats?.recent?.recentUsers || []
 
   return (
     <div className="dashboard-container">
       <header className="dashboard-title-section">
-        <h1>BANG DIEU KHIEN</h1>
-        <p>Tong quan so lieu ngay {new Date().toLocaleDateString('vi-VN')}</p>
+        <div className="title-content">
+          <div className="title-text">
+            <h1>Bang dieu khien</h1>
+            <p className="subtitle">
+              <Calendar size={16} />
+              {today}
+            </p>
+          </div>
+          <div className="title-decoration">
+            <div className="deco-circle deco-1"></div>
+            <div className="deco-circle deco-2"></div>
+          </div>
+        </div>
       </header>
 
       <section className="dashboard-stats-grid">
-        <StatCard label="Nguoi dung" value={counts.userCount} icon={Users} toneClass="tone-rose" iconClass="tone-rose-icon" />
-        <StatCard label="Cong thuc" value={counts.recipeCount} icon={Utensils} toneClass="tone-cyan" iconClass="tone-cyan-icon" />
-        <StatCard label="Quang cao" value={counts.bannerCount} icon={ImageIcon} toneClass="tone-orange" iconClass="tone-orange-icon" />
-        <StatCard label="Cho xu ly" value={counts.reportsPending} icon={AlertCircle} toneClass="tone-purple" iconClass="tone-purple-icon" />
+        {StatCardData.map((stat, index) => (
+          <div 
+            key={stat.key} 
+            className="stat-card-wrapper"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <StatCard 
+              label={stat.label} 
+              value={statValues[stat.key]} 
+              icon={stat.icon} 
+              toneClass={stat.toneClass} 
+              iconClass={stat.iconClass}
+            />
+          </div>
+        ))}
       </section>
 
       <section className="dashboard-grid">
@@ -141,8 +193,16 @@ export default function Dashboard() {
         </div>
 
         <aside className="dashboard-right-column">
-          <RevenueSummaryCard totalRevenue={counts.totalRevenue} formatCurrency={formatCurrency} />
-          <ReportStatusCard resolvedCount={counts.reportsResolved} pieData={pieData} />
+          <RevenueSummaryCard 
+            totalRevenue={counts.totalRevenue} 
+            formatCurrency={formatCurrency}
+            monthlyGrowth={12.5}
+          />
+          <ReportStatusCard 
+            resolvedCount={counts.reportsResolved}
+            pendingCount={counts.reportsPending}
+            pieData={pieData}
+          />
         </aside>
       </section>
     </div>
