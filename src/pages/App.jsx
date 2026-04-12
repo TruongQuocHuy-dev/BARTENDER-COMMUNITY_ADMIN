@@ -3,8 +3,6 @@ import { Routes, Route, useNavigate } from "react-router-dom"
 import { AuthProvider, useAuth } from '../context/AuthContext'
 
 // Styles
-import "../styles/form.css"
-import "../styles/recipes.css"
 
 // Components
 import Dashboard from "./dashboard/Dashboard"

@@ -4,8 +4,9 @@ import { FiEdit, FiTrash2, FiEye, FiPlus, FiSearch, FiHeart, FiVideo } from 'rea
 import { Image as ImageIcon } from 'lucide-react'; // Icon placeholder
 import Modal from '../../components/Modal'
 import PageHeader from '../../components/PageHeader'
-import '../../styles/components/table.css' // Đảm bảo bạn đã import
 import TableActionMenu from '../../components/TableActionMenu';
+import FormSearchField from '../../components/common/FormSearchField';
+import EmptyState from '../../components/common/EmptyState';
 
 // --- 1. DetailModal (Đã thiết kế lại hoàn toàn) ---
 function DetailModal({ item, onClose }) {
@@ -115,7 +116,7 @@ export default function Posts() {
   const filtered = items.filter(p => (p.caption || '').toLowerCase().includes(query.toLowerCase()))
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="admin-page">
       <PageHeader
         title="QUẢN LÝ BÀI VIẾT"
         subtitle={`Tổng ${items.length} bài viết`}
@@ -132,36 +133,11 @@ export default function Posts() {
 
         {/* Wrapper cho ô tìm kiếm: Phải có width 100% */}
         <div style={{ position: 'relative', width: '100%' }}>
-
-          {/* Icon Search */}
-          <FiSearch
-            size={18}
-            style={{
-              position: 'absolute',
-              left: 12,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#9ca3af',
-              zIndex: 1
-            }}
-          />
-
-          {/* Input Field */}
-          <input
-            placeholder="Tìm kiếm theo nội dung bài viết..."
+          <FormSearchField
             value={query}
-            onChange={e => setQuery(e.target.value)}
-            className="input-field"
-            style={{
-              width: '100%',                // QUAN TRỌNG: Bắt buộc để nó dãn ra hết màn hình
-              height: 44,                   // Tăng chiều cao lên chút cho dễ bấm
-              padding: '0 12px 0 40px',     // Padding trái 40px để tránh đè lên icon
-              borderRadius: 8,
-              border: '1px solid #e5e7eb',
-              outline: 'none',
-              boxSizing: 'border-box',       // Đảm bảo padding không làm vỡ khung
-              fontSize: '14px'
-            }}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm kiếm theo nội dung bài viết..."
+            icon={FiSearch}
           />
         </div>
       </div>
@@ -171,10 +147,7 @@ export default function Posts() {
         {loading ? (
           <div className="text-center py-10 text-gray-500">Đang tải dữ liệu...</div>
         ) : filtered.length === 0 ? (
-          <div className="empty-state text-center py-10 text-gray-500">
-            <div className="text-4xl mb-3">📝</div>
-            <p>Không tìm thấy bài viết nào.</p>
-          </div>
+          <EmptyState icon="📝" message="Không tìm thấy bài viết nào." />
         ) : (
           <table className="table posts-table">
             <thead>

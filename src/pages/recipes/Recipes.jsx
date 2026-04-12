@@ -249,7 +249,7 @@ export default function Recipes() {
     }
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="admin-page">
             <PageHeader
                 title="QUẢN LÝ CÔNG THỨC"
                 subtitle={`Hiển thị ${paginatedItems.length} / ${filtered.length} công thức`}

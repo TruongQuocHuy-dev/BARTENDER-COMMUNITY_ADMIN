@@ -4,23 +4,13 @@ import '../../styles/components/banner-form.css';
 import { FiX, FiImage } from 'react-icons/fi';
 
 const MediaUploadBox = ({ label, preview, onButtonClick, Icon, children }) => (
-  <div>
+  <div className="modal-form-group">
     <label className="form-label">{label}</label>
-    <div style={{
-      border: preview ? 'none' : '2px dashed #d1d5db',
-      borderRadius: 4,
-      padding: preview ? 0 : 20,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: 200,
-      backgroundColor: preview ? 'transparent' : '#f9fafb'
-    }}>
+    <div className="banner-media-shell">
       {children}
       {!preview && (
-        <div style={{ color: '#9ca3af', textAlign: 'center' }}>
-          <Icon size={30} style={{ marginBottom: 8 }} />
+        <div className="banner-media-empty-state">
+          <Icon size={30} />
           <p className="text-sm">Click vào nút bên dưới để tải lên.</p>
         </div>
       )}
@@ -28,18 +18,7 @@ const MediaUploadBox = ({ label, preview, onButtonClick, Icon, children }) => (
     <button
       type="button"
       onClick={onButtonClick}
-      className="upload-button"
-      style={{
-        width: '100%',
-        marginTop: 8,
-        padding: '10px',
-        background: '#eef2ff',
-        color: '#4f46e5',
-        border: '1px solid #4f46e550',
-        borderRadius: '6px',
-        fontWeight: 600,
-        cursor: 'pointer'
-      }}
+      className="upload-button banner-upload-button"
     >
       {preview ? `Thay đổi ${label.toLowerCase()}` : `Tải lên ${label.toLowerCase()}`}
     </button>
@@ -144,17 +123,18 @@ export default function BannerForm({ banner, onClose, onSaved }) {
   return (
     <div className="modal-form">
       {error && (
-        <div className="modal-form-error" style={{ marginBottom: 16 }}>
+        <div className="modal-form-error banner-modal-error">
           ⚠️ {error}
         </div>
       )}
 
       <form onSubmit={save}>
         {/* 2 Column Layout: Left fields, Right image */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div className="modal-form-section-card">
+        <div className="modal-form-grid">
 
           {/* LEFT COLUMN - All Fields */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
             <div className="modal-form-group">
               <label className="form-label required">Tiêu đề</label>
               <input
@@ -177,8 +157,8 @@ export default function BannerForm({ banner, onClose, onSaved }) {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
+            <div className="modal-form-grid">
+              <div className="modal-form-group">
                 <label className="form-label">Trạng thái</label>
                 <select
                   value={form.status}
@@ -189,7 +169,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 </select>
               </div>
 
-              <div>
+              <div className="modal-form-group">
                 <label className="form-label">Độ ưu tiên</label>
                 <input
                   type="number"
@@ -200,8 +180,8 @@ export default function BannerForm({ banner, onClose, onSaved }) {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
+            <div className="modal-form-grid">
+              <div className="modal-form-group">
                 <label className="form-label">Ngày bắt đầu</label>
                 <input
                   type="date"
@@ -210,7 +190,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 />
               </div>
 
-              <div>
+              <div className="modal-form-group">
                 <label className="form-label">Ngày kết thúc</label>
                 <input
                   type="date"
@@ -233,7 +213,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
           </div>
 
           {/* RIGHT COLUMN - Image Upload & Content Detail */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
             <MediaUploadBox
               label="Hình ảnh Banner*"
               preview={imagePreview}
@@ -244,7 +224,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 4, marginBottom: 8 }}
+                  className="banner-media-preview"
                 />
               )}
               <input
@@ -268,28 +248,28 @@ export default function BannerForm({ banner, onClose, onSaved }) {
             </div>
           </div>
         </div>
+        </div>
 
         {/* Highlights - Full Width Below */}
-        <div style={{ marginTop: 16 }}>
+        <div className="modal-form-section-card banner-highlights-section">
           <label className="form-label">Điểm nổi bật (tùy chọn)</label>
-          <div style={{ border: '1px solid #e5e7eb', padding: 15, borderRadius: 8, marginTop: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+          <div className="modal-form-list banner-highlights-list">
+            <div className="banner-highlights-add-row">
               <button type="button" onClick={addHighlight} className="button-secondary">+ Thêm</button>
             </div>
             {form.highlights?.map((highlight, i) => (
-              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+              <div key={i} className="banner-highlight-row">
                 <input
                   value={highlight}
                   onChange={e => updateHighlight(i, e.target.value)}
                   placeholder={`Điểm nổi bật ${i + 1}`}
-                  style={{ flex: 1, padding: '10px 12px', border: '1.5px solid #e5e7eb', borderRadius: 8 }}
+                  className="form-input"
                 />
                 <button
                   type="button"
                   onClick={() => removeHighlight(i)}
                   className="button-danger"
                   disabled={form.highlights.length === 1}
-                  style={{ padding: '8px 12px' }}
                 >
                   <FiX size={16} />
                 </button>

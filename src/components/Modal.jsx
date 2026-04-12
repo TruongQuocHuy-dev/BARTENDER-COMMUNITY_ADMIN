@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import '../styles/components/modal.css';
 
 export default function Modal({ 
   isOpen, 
@@ -23,6 +22,22 @@ export default function Modal({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        onClose?.()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEsc)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEsc)
+    }
+  }, [isOpen, onClose])
+
   if (!isOpen) return null;
 
   return (
@@ -30,11 +45,14 @@ export default function Modal({
       <div 
         className={`modal-content modal-${size}`} 
         onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
         <div className="modal-header">
           <div>
             <h2>{title}</h2>
-            {subtitle && <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>{subtitle}</div>}
+            {subtitle && <p className="modal-subtitle">{subtitle}</p>}
           </div>
           {showCloseButton && (
             <button onClick={onClose} className="modal-close">

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import PageHeader from '../../components/PageHeader';
 import { User, Mail, Shield, Calendar, Eye, EyeOff } from 'lucide-react';
-import '../../styles/components/table.css';
 
 export default function Profile() {
     const { user } = useAuth();
@@ -32,7 +31,7 @@ export default function Profile() {
     };
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="admin-page">
             <PageHeader
                 title="HỒ SƠ CÁ NHÂN"
                 subtitle="Thông tin tài khoản quản trị viên"

@@ -1,49 +1,36 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import api from '../../api/client'; // Đảm bảo đường dẫn đúng
-import { FiEye, FiSearch, FiFilter } from 'react-icons/fi';
-import { AlertTriangle, CheckCircle, Mail, MessageSquare, Flag } from 'lucide-react';
+import { FiSearch, FiFilter } from 'react-icons/fi';
+import { AlertTriangle, CheckCircle, Mail, Flag } from 'lucide-react';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
-import '../../styles/components/table.css';
 import TableActionMenu from '../../components/TableActionMenu';
+import BadgePill from '../../components/common/BadgePill';
+import FormSearchField from '../../components/common/FormSearchField';
+import FormSelectField from '../../components/common/FormSelectField';
+import EmptyState from '../../components/common/EmptyState';
 
 // --- 1. Helper: Status Badge (Giữ nguyên) ---
 const StatusBadge = ({ status }) => {
   const isPending = status === 'pending';
-  const color = isPending ? '#f59e0b' : '#10b981';
   const Icon = isPending ? AlertTriangle : CheckCircle;
   const label = isPending ? 'Chờ xử lý' : 'Đã xong';
+  const tone = isPending ? 'warning' : 'success'
 
-  return (
-    <span style={{
-      padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: '600',
-      backgroundColor: `${color}1A`, color: color, display: 'inline-flex', alignItems: 'center', gap: '4px'
-    }}>
-      <Icon size={14} /> {label}
-    </span>
-  );
+  return <BadgePill label={label} icon={Icon} tone={tone} />
 };
 
 // --- 2. Helper: Type Badge (MỚI) ---
 // Phân biệt màu sắc giữa Hỗ trợ và Báo cáo xấu
 const TypeBadge = ({ type, targetType }) => {
   const isSupport = type === 'support';
-  // Nếu là support: Màu xanh dương. Nếu vi phạm: Màu cam/đỏ
-  const color = isSupport ? '#3b82f6' : '#ef4444';
   const Icon = isSupport ? Mail : Flag;
 
   // Text hiển thị: Nếu là support thì ghi "Hỗ trợ", nếu không thì ghi loại (Post/Comment)
   const label = isSupport ? 'Yêu cầu Hỗ trợ' : `Báo cáo: ${targetType || 'Khác'}`;
+  const tone = isSupport ? 'info' : 'danger'
 
-  return (
-    <span style={{
-      padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '600',
-      backgroundColor: `${color}1A`, color: color, display: 'inline-flex', alignItems: 'center', gap: '6px',
-      border: `1px solid ${color}33`
-    }}>
-      <Icon size={14} /> {label}
-    </span>
-  );
+  return <BadgePill label={label} icon={Icon} tone={tone} />
 };
 
 // --- 3. Modal Chi Tiết (NÂNG CẤP) ---
@@ -210,7 +197,7 @@ export default function ReportsAndSupport() {
   }), [items, query, statusFilter, typeFilter]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="admin-page">
       <PageHeader
         title="QUẢN LÝ BÁO CÁO & HỖ TRỢ"
         subtitle={`Tổng hợp ${filtered.length} phiếu yêu cầu từ người dùng`}
@@ -227,70 +214,40 @@ export default function ReportsAndSupport() {
 
         {/* 1. Search Box (Chiếm 3 phần - Rộng nhất) */}
         <div style={{ position: 'relative', flex: 3, minWidth: 0 }}>
-          <FiSearch size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', zIndex: 1 }} />
-          <input
-            placeholder="Tìm kiếm nội dung, tiêu đề, email..."
+          <FormSearchField
             value={query}
-            onChange={e => setQuery(e.target.value)}
-            className="input-field"
-            style={{
-              paddingLeft: 40,
-              width: '100%',      // Bắt buộc
-              height: 42,
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              outline: 'none',
-              boxSizing: 'border-box' // Đảm bảo padding không làm vỡ size
-            }}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm kiếm nội dung, tiêu đề, email..."
+            icon={FiSearch}
           />
         </div>
 
         {/* 2. Filter Type (Chiếm 1 phần) */}
         <div style={{ position: 'relative', flex: 1, minWidth: 160 }}>
-          <FiFilter size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#6b7280', zIndex: 1 }} />
-          <select
+          <FormSelectField
             value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
-            className="input-field"
-            style={{
-              width: '100%',
-              paddingLeft: 38,
-              height: 42,
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              cursor: 'pointer',
-              outline: 'none',
-              boxSizing: 'border-box'
-            }}
-          >
-            <option value="all">Tất cả loại phiếu</option>
-            <option value="support">Chỉ Hỗ trợ</option>
-            <option value="violation">Chỉ Báo cáo xấu</option>
-          </select>
+            onChange={(e) => setTypeFilter(e.target.value)}
+            icon={FiFilter}
+            options={[
+              { value: 'all', label: 'Tất cả loại phiếu' },
+              { value: 'support', label: 'Chỉ Hỗ trợ' },
+              { value: 'violation', label: 'Chỉ Báo cáo xấu' },
+            ]}
+          />
         </div>
 
         {/* 3. Filter Status (Chiếm 1 phần) */}
         <div style={{ position: 'relative', flex: 1, minWidth: 160 }}>
-          <CheckCircle size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#6b7280', zIndex: 1 }} />
-          <select
+          <FormSelectField
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="input-field"
-            style={{
-              width: '100%',
-              paddingLeft: 38,
-              height: 42,
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              cursor: 'pointer',
-              outline: 'none',
-              boxSizing: 'border-box'
-            }}
-          >
-            <option value="all">Mọi trạng thái</option>
-            <option value="pending">Chờ xử lý</option>
-            <option value="resolved">Đã xử lý</option>
-          </select>
+            onChange={(e) => setStatusFilter(e.target.value)}
+            icon={CheckCircle}
+            options={[
+              { value: 'all', label: 'Mọi trạng thái' },
+              { value: 'pending', label: 'Chờ xử lý' },
+              { value: 'resolved', label: 'Đã xử lý' },
+            ]}
+          />
         </div>
       </div>
 
@@ -299,10 +256,7 @@ export default function ReportsAndSupport() {
         {loading ? (
           <div className="text-center py-12 text-gray-500">Đang tải dữ liệu...</div>
         ) : filtered.length === 0 ? (
-          <div className="empty-state text-center py-16 text-gray-400">
-            <div style={{ fontSize: 40, marginBottom: 10 }}>📭</div>
-            <p>Không tìm thấy phiếu nào khớp với bộ lọc.</p>
-          </div>
+          <EmptyState icon="📭" message="Không tìm thấy phiếu nào khớp với bộ lọc." />
         ) : (
           <div className="overflow-x-auto">
             <table className="table reports-table">

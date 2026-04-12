@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
-import '../styles/components.css'; // Ensure we have access to variables
 
 const TableActionMenu = ({ onEdit, onDelete, onView, customActions = [] }) => {
     const [isOpen, setIsOpen] = useState(false);

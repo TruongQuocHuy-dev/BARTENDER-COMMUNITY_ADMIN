@@ -3,10 +3,11 @@ import api from '../../api/client'
 import { FiEye, FiEdit, FiTrash2, FiPlus, FiSearch, FiX, FiCheck, FiStar } from 'react-icons/fi'
 import Modal from '../../components/Modal'
 import PageHeader from '../../components/PageHeader'
-// Đảm bảo import CSS bảng đã sửa (có table-layout: fixed)
-import '../../styles/components/table.css'
 import '../../styles/components/modal-form.css'
 import TableActionMenu from '../../components/TableActionMenu';
+import FormSearchField from '../../components/common/FormSearchField';
+import FormSelectField from '../../components/common/FormSelectField';
+import EmptyState from '../../components/common/EmptyState';
 
 // ... (Giữ nguyên các hàm Helper: formatCurrency, PopularBadge, DetailItem...)
 const formatCurrency = (value, currency = 'USD') => {
@@ -80,7 +81,6 @@ function DetailModal({ item, onClose }) {
   )
 }
 
-// ... (Giữ nguyên EditPlanModal hoàn toàn giống code cũ)
 function EditPlanModal({ plan, onClose, onSaved }) {
   const [form, setForm] = useState(plan || { tier: 'premium', billingCycle: 'monthly', currency: 'VND', price: 0, features: [], popularPlan: false, name: '', planId: '' })
   const [featureInput, setFeatureInput] = useState('')
@@ -109,27 +109,28 @@ function EditPlanModal({ plan, onClose, onSaved }) {
 
   return (
     <Modal isOpen={!!plan} onClose={onClose} title={form._id ? 'Sửa Gói' : 'Tạo Gói Mới'} size="medium">
-      <div style={{ paddingRight: 0 }}>
-        <div style={{ display: 'flex', gap: 24, marginBottom: 16 }}>
-          <div className="modal-form-group" style={{ flex: 1 }}>
+      <div className="modal-form payment-plan-form">
+        <div className="modal-form-section-card">
+          <div className="modal-form-grid">
+          <div className="modal-form-group">
             <label className="form-label">Tên Gói</label>
             <input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} className="form-input" placeholder="Premium Tháng" />
           </div>
-          <div className="modal-form-group" style={{ flex: 1 }}>
+          <div className="modal-form-group">
             <label className="form-label">Plan ID (Stripe/Momo...)</label>
             <input value={form.planId || ''} onChange={e => setForm({ ...form, planId: e.target.value })} disabled={!!form._id} className="form-input" placeholder="plan_monthly_123" />
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 24, marginBottom: 16 }}>
-          <div className="modal-form-group" style={{ flex: 1 }}>
+        <div className="modal-form-grid">
+          <div className="modal-form-group">
             <label className="form-label">Tier</label>
             <select value={form.tier || 'premium'} onChange={e => setForm({ ...form, tier: e.target.value })} className="form-input">
               <option value="free">Miễn phí</option>
               <option value="premium">Cao cấp</option>
             </select>
           </div>
-          <div className="modal-form-group" style={{ flex: 1 }}>
+          <div className="modal-form-group">
             <label className="form-label">Chu kỳ Thanh toán</label>
             <select value={form.billingCycle || 'monthly'} onChange={e => setForm({ ...form, billingCycle: e.target.value })} className="form-input">
               <option value="monthly">Hàng tháng (monthly)</option>
@@ -138,8 +139,8 @@ function EditPlanModal({ plan, onClose, onSaved }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 24, marginBottom: 16 }}>
-          <div className="modal-form-group" style={{ flex: 2 }}>
+        <div className="modal-form-grid">
+          <div className="modal-form-group">
             <label className="form-label">Giá (Price)</label>
             <input type="number" value={form.price ?? 0} onChange={e => setForm({ ...form, price: Number(e.target.value) })} className="form-input" />
           </div>
@@ -148,17 +149,19 @@ function EditPlanModal({ plan, onClose, onSaved }) {
             <input value={form.currency || 'VND'} onChange={e => setForm({ ...form, currency: e.target.value })} className="form-input" placeholder="VND, USD..." />
           </div>
         </div>
+        </div>
 
+        <div className="modal-form-section-card">
         <div className="modal-form-group">
           <label className="form-label">Tính năng</label>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <input value={featureInput} onChange={e => setFeatureInput(e.target.value)} placeholder="Thêm một tính năng..." className="form-input" style={{ flex: 1 }} />
+          <div className="payment-plan-feature-input-row">
+            <input value={featureInput} onChange={e => setFeatureInput(e.target.value)} placeholder="Thêm một tính năng..." className="form-input" />
             <button type="button" className="button-primary" onClick={addFeature}>Thêm</button>
           </div>
           {Array.isArray(form.features) && form.features.length > 0 && (
-            <div style={{ border: '1px solid #e5e7eb', padding: 10, borderRadius: 8, maxHeight: 150, overflowY: 'auto' }}>
+            <div className="modal-form-list">
               {form.features.map((f, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px dotted #eee' }}>
+                <div key={i} className="modal-form-list-item">
                   <span>{f}</span>
                   <button type="button" className="small-icon-button danger" onClick={() => removeFeature(i)}>
                     <FiX size={16} />
@@ -169,13 +172,14 @@ function EditPlanModal({ plan, onClose, onSaved }) {
           )}
         </div>
 
-        <div className="modal-form-group" style={{ marginTop: 20 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}>
-            <input type="checkbox" checked={!!form.popularPlan} onChange={e => setForm({ ...form, popularPlan: e.target.checked })} style={{ transform: 'scale(1.2)' }} />
-            <span style={{ fontWeight: 600, color: '#f59e0b' }}>
+        <div className="modal-form-group">
+          <label className="payment-plan-popular-toggle">
+            <input type="checkbox" checked={!!form.popularPlan} onChange={e => setForm({ ...form, popularPlan: e.target.checked })} />
+            <span>
               Đánh dấu là Gói Phổ biến
             </span>
           </label>
+        </div>
         </div>
       </div>
 
@@ -226,7 +230,7 @@ export default function PaymentMethods() {
   }), [items, query, tierFilter]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="admin-page">
       <PageHeader
         title="Các Gói Thanh toán"
         subtitle={`Tổng ${items.length} gói`}
@@ -245,46 +249,25 @@ export default function PaymentMethods() {
         }}>
         {/* Search */}
         <div style={{ position: 'relative', flex: 3, minWidth: 0 }}>
-          <FiSearch size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', zIndex: 1 }} />
-          <input
-            placeholder="Tìm kiếm theo tên, tier, chu kỳ..."
+          <FormSearchField
             value={query}
-            onChange={e => setQuery(e.target.value)}
-            className="input-field"
-            style={{
-              paddingLeft: 40,
-              width: '100%',
-              height: 42,
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              outline: 'none',
-              boxSizing: 'border-box'
-            }}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm kiếm theo tên, tier, chu kỳ..."
+            icon={FiSearch}
           />
         </div>
 
         {/* Filter Tier */}
         <div style={{ position: 'relative', flex: 1, minWidth: 160 }}>
-          <select
+          <FormSelectField
             value={tierFilter}
-            onChange={e => setTierFilter(e.target.value)}
-            className="input-field"
-            style={{
-              width: '100%',
-              height: 42,
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              cursor: 'pointer',
-              outline: 'none',
-              boxSizing: 'border-box',
-              paddingLeft: 12,
-              paddingRight: 32
-            }}
-          >
-            <option value="all">Tất cả Tier</option>
-            <option value="free">Miễn phí</option>
-            <option value="premium">Cao cấp</option>
-          </select>
+            onChange={(e) => setTierFilter(e.target.value)}
+            options={[
+              { value: 'all', label: 'Tất cả Tier' },
+              { value: 'free', label: 'Miễn phí' },
+              { value: 'premium', label: 'Cao cấp' },
+            ]}
+          />
         </div>
       </div>
 
@@ -293,10 +276,7 @@ export default function PaymentMethods() {
         {loading ? (
           <div className="text-center py-10 text-gray-500">Đang tải dữ liệu...</div>
         ) : filtered.length === 0 ? (
-          <div className="empty-state text-center py-10 text-gray-500">
-            <div className="text-4xl mb-3">💳</div>
-            <p>Chưa có gói thanh toán nào được tạo.</p>
-          </div>
+          <EmptyState icon="💳" message="Chưa có gói thanh toán nào được tạo." />
         ) : (
           /* SỬA ĐỔI: Thêm class "table" và bỏ w-full vì class table đã lo việc đó */
           <table className="table">

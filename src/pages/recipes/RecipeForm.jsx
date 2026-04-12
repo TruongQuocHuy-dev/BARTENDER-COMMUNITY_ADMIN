@@ -271,9 +271,10 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
 
 
         {/* Media Section */}
-        <div style={{ marginTop: 24, marginBottom: 8 }}>
+        <div className="modal-form-section">
           <label className="form-label">Media</label>
         </div>
+        <div className="modal-form-section-card">
         <div className="modal-form-grid">
 
           {/* Image Upload */}
@@ -322,16 +323,17 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
             />
           </MediaUploadBox>
         </div>
+        </div>
 
         {/* Ingredients Section */}
-        <div style={{ marginTop: 24, marginBottom: 8 }}>
+        <div className="modal-form-section">
           <label className="form-label required">Nguyên liệu</label>
         </div>
-        <div style={{ marginBottom: 20, border: '1px solid #e5e7eb', padding: 15, borderRadius: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+        <div className="modal-form-section-card recipe-ingredients-card">
+          <div className="recipe-list-actions">
             <button onClick={addIngredient} className="button-secondary small-button">+ Thêm Nguyên liệu</button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '3fr 0.8fr 24px 1.2fr 24px 48px', gap: 16, fontWeight: 700, color: '#4b5563', marginBottom: 8, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div className="recipe-ingredients-header">
             <span>Tên Nguyên Liệu*</span>
             <span>Số Lượng</span>
             <span></span>
@@ -340,27 +342,27 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
             <span></span>
           </div>
           {form.ingredients.map((ing, index) => (
-            <div key={index} style={{ display: 'grid', gridTemplateColumns: '3fr 0.8fr 24px 1.2fr 24px 48px', gap: 16, marginBottom: 12 }}>
+            <div key={index} className="recipe-ingredients-row">
               <input
                 value={ing.name}
                 onChange={e => updateIngredient(index, 'name', e.target.value)}
                 placeholder="Ví dụ: Vodka"
-                style={{ padding: '10px 12px', border: '1.5px solid #e5e7eb', borderRadius: 8 }}
+                className="form-input"
               />
               <input
                 value={ing.amount}
                 onChange={e => updateIngredient(index, 'amount', e.target.value)}
                 placeholder="SL"
-                style={{ padding: '10px 12px', border: '1.5px solid #e5e7eb', borderRadius: 8 }}
+                className="form-input"
                 type="number"
               />
               <div></div>
-              <div style={{ position: 'relative' }}>
+              <div>
                 <input
                   value={ing.unit}
                   onChange={e => updateIngredient(index, 'unit', e.target.value)}
                   placeholder="Đơn vị"
-                  style={{ padding: '10px 12px', border: '1.5px solid #e5e7eb', borderRadius: 8, width: '100%' }}
+                  className="form-input"
                   list="unit-suggestions"
                 />
               </div>
@@ -370,7 +372,7 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
                 onClick={() => removeIngredient(index)}
                 className="small-icon-button danger"
                 disabled={form.ingredients.length === 1}
-                style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: '100%', height: '100%' }}
               >
                 <FiX size={16} />
               </button>
@@ -379,34 +381,34 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
         </div>
 
         {/* Steps Section */}
-        <div style={{ marginTop: 24, marginBottom: 8 }}>
+        <div className="modal-form-section">
           <label className="form-label required">Các bước thực hiện</label>
         </div>
-        <div style={{ marginBottom: 20, border: '1px solid #e5e7eb', padding: 15, borderRadius: 8 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+        <div className="modal-form-section-card recipe-steps-card">
+          <div className="recipe-list-actions">
             <button onClick={addStep} className="button-secondary small-button">+ Thêm Bước</button>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, fontWeight: 600, color: '#4b5563', marginBottom: 5, fontSize: 13, textTransform: 'uppercase' }}>
-            <span style={{ minWidth: 30 }}>STT</span>
-            <span style={{ flex: 1 }}>Mô tả bước</span>
-            <span style={{ width: 48 }}></span>
+          <div className="recipe-steps-header">
+            <span>STT</span>
+            <span>Mô tả bước</span>
+            <span></span>
           </div>
 
           {form.steps.map((step, index) => (
-            <div key={index} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ minWidth: 30, fontWeight: 600, color: '#4b5563', textAlign: 'center' }}>{index + 1}.</div>
+            <div key={index} className="recipe-step-row">
+              <div className="recipe-step-index">{index + 1}.</div>
               <input
                 value={step}
                 onChange={e => updateStep(index, e.target.value)}
                 placeholder={`Mô tả bước ${index + 1}`}
-                style={{ flex: 1, padding: '10px 12px', border: '1.5px solid #e5e7eb', borderRadius: 8 }}
+                className="form-input"
               />
               <button
                 onClick={() => removeStep(index)}
                 className="small-icon-button danger"
                 disabled={form.steps.length === 1}
-                style={{ width: 48, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: 48, height: 42 }}
               >
                 <FiX size={16} />
               </button>
@@ -428,15 +430,14 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
 
 
         {/* 5. Premium Toggle */}
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}>
+        <div className="modal-form-section-card">
+          <label className="payment-plan-popular-toggle">
             <input
               type="checkbox"
               checked={form.isPremium}
               onChange={e => setForm({ ...form, isPremium: e.target.checked })}
-              style={{ transform: 'scale(1.2)' }}
             />
-            <span style={{ fontWeight: 600, color: '#f59e0b' }}>
+            <span>
               Premium Recipe (Chỉ thành viên trả phí mới xem được)
             </span>
           </label>
@@ -444,7 +445,7 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
 
         {/* Error Message */}
         {error && (
-          <div className="modal-form-error" style={{ padding: 12, background: '#fef2f2', borderRadius: 8, marginTop: 16 }}>
+          <div className="modal-form-error recipe-form-error">
             ⚠️ {error}
           </div>
         )}
@@ -465,43 +466,22 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
 
 // --- Helper Component for Media Upload Box (Không đổi) ---
 const MediaUploadBox = ({ label, preview, onButtonClick, Icon, children }) => (
-  <div>
+  <div className="modal-form-group">
     <label className="form-label">{label}</label>
     <div
-      style={{
-        border: preview ? 'none' : '2px dashed #d1d5db',
-        borderRadius: 4,
-        padding: preview ? 0 : 20,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: 200,
-        backgroundColor: preview ? 'transparent' : '#f9fafb'
-      }}
+      className="recipe-media-shell"
     >
       {children}
       {!preview && (
-        <div style={{ color: '#9ca3af', textAlign: 'center' }}>
-          <Icon size={30} style={{ marginBottom: 8 }} />
+        <div className="recipe-media-empty">
+          <Icon size={30} />
           <p className="text-sm">Click vào nút bên dưới để tải lên.</p>
         </div>
       )}
     </div>
     <button
       onClick={onButtonClick}
-      className="upload-button"
-      style={{
-        width: '100%',
-        marginTop: 8,
-        padding: '10px',
-        background: '#eef2ff',
-        color: '#4f46e5',
-        border: '1px solid #4f46e550',
-        borderRadius: '6px',
-        fontWeight: 600,
-        cursor: 'pointer'
-      }}
+      className="upload-button recipe-upload-button"
     >
       {preview ? `Thay đổi ${label.toLowerCase()}` : `Tải lên ${label.toLowerCase()}`}
     </button>

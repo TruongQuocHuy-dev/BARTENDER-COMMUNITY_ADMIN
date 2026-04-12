@@ -3,33 +3,19 @@ import api from '../../api/client'
 import { FiEdit, FiTrash2, FiEye, FiPlus, FiSearch } from 'react-icons/fi'
 import { CheckCircle, AlertTriangle } from 'lucide-react' // Dùng icon cho Status
 import BannerForm from '../../components/banners/BannerForm' // Sửa đường dẫn nếu cần
-import '../../styles/components/table.css'
 import Modal from '../../components/Modal' // Import Modal chuẩn
 import PageHeader from '../../components/PageHeader' // Import PageHeader
 import TableActionMenu from '../../components/TableActionMenu';
+import BadgePill from '../../components/common/BadgePill';
+import FormSearchField from '../../components/common/FormSearchField';
 
 // --- Helper Component: Status Badge ---
 const StatusBadge = ({ status }) => {
   const isActive = status === 'active';
-  const color = isActive ? '#10b981' : '#f59e0b'; // Green or Amber
   const Icon = isActive ? CheckCircle : AlertTriangle;
+  const tone = isActive ? 'success' : 'warning';
 
-  return (
-    <span style={{
-      padding: '4px 8px',
-      borderRadius: '12px',
-      fontSize: '12px',
-      fontWeight: '600',
-      backgroundColor: `${color}1A`, // 10% opacity
-      color: color,
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '4px'
-    }}>
-      <Icon size={14} />
-      {isActive ? 'Hoạt động' : 'Không hoạt động'}
-    </span>
-  );
+  return <BadgePill label={isActive ? 'Hoạt động' : 'Không hoạt động'} icon={Icon} tone={tone} />
 };
 
 // --- Helper Component: Detail Modal ---
@@ -102,7 +88,7 @@ export default function Banners() {
   const filtered = items.filter(b => (b.title || '').toLowerCase().includes(query.toLowerCase()))
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="admin-page">
       <PageHeader
         title="QUẢN LÝ QUẢNG CÁO"
         subtitle={`Tổng ${items.length} banners`}
@@ -120,21 +106,11 @@ export default function Banners() {
           alignItems: 'center'
         }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-          <FiSearch size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', zIndex: 1 }} />
-          <input
-            placeholder="Tìm kiếm banner theo tiêu đề..."
+          <FormSearchField
             value={query}
-            onChange={e => setQuery(e.target.value)}
-            className="input-field"
-            style={{
-              paddingLeft: 40,
-              width: '100%',
-              height: 42,
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              outline: 'none',
-              boxSizing: 'border-box'
-            }}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm kiếm banner theo tiêu đề..."
+            icon={FiSearch}
           />
         </div>
       </div>

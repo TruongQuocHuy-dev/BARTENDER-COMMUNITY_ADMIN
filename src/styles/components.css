@@ -558,3 +558,77 @@ input[type="checkbox"]:checked {
     justify-content: center;
   }
 }
+
+/* ========================================= */
+/* COMMON UI (REUSABLE)                      */
+/* ========================================= */
+
+.common-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.common-badge-success {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.common-badge-warning {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.common-badge-danger {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.common-badge-info {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.common-badge-neutral {
+  color: var(--text-secondary);
+  background: var(--bg-light);
+}
+
+.common-field-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.common-field-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.common-input {
+  width: 100%;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+
+.common-field-wrap .common-input {
+  padding-left: 40px;
+}
+
+.common-empty-state {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-secondary);
+}
+
+.common-empty-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+}

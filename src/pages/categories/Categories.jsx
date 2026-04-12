@@ -80,9 +80,10 @@ function EditCategoryModal({ cat, onClose, onSaved }) {
       title={form._id ? 'Chỉnh sửa Danh mục' : 'Thêm Danh mục Mới'}
       size="small"
     >
-      <div style={{ display: 'flex', gap: 24 }}>
-        {/* Left Column: Form Fields */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className="modal-form">
+        <div className="modal-form-section-card">
+          <div className="modal-form-grid">
+        <div>
           {/* 1. Category Name Input */}
           <div className="modal-form-group">
             <label htmlFor="name" className="form-label required">Tên Danh mục</label>
@@ -105,24 +106,22 @@ function EditCategoryModal({ cat, onClose, onSaved }) {
         </div>
 
         {/* Right Column: Image Upload */}
-        <div style={{ flex: 1 }}>
+        <div>
           <div className="modal-form-group">
             <label className="form-label required">Hình ảnh Danh mục</label>
 
             <div
               className="modal-form-upload"
               onClick={() => fileRef.current?.click()}
-              style={{ height: '100%', minHeight: 200 }}
             >
               {imagePreview ? (
-                <div className="modal-form-image-preview" style={{ height: '100%' }}>
+                <div className="modal-form-image-preview category-modal-preview">
                   <img
                     src={imagePreview}
                     alt="Xem trước hình ảnh"
-                    style={{ height: '100%', width: '100%', objectFit: 'cover' }}
                   />
                   <div className="modal-form-image-preview-overlay">
-                    <span style={{ color: 'white', fontWeight: 600 }}>Thay đổi</span>
+                    <span className="category-modal-overlay-text">Thay đổi</span>
                   </div>
                 </div>
               ) : (
@@ -149,10 +148,12 @@ function EditCategoryModal({ cat, onClose, onSaved }) {
             </div>
           </div>
         </div>
+        </div>
+      </div>
       </div>
 
       {/* Modal Footer */}
-      <div className="modal-footer" style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+      <div className="modal-footer">
         <button
           className="button-secondary"
           onClick={onClose}
@@ -285,7 +286,7 @@ export default function Categories() {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="admin-page">
       <PageHeader
         title="QUẢN LÝ DANH MỤC"
         subtitle={`Tổng ${cats.length} danh mục`}

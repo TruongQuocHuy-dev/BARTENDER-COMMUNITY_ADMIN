@@ -7,9 +7,13 @@ import { FaCrown } from 'react-icons/fa';
 import FilterChip from '../../components/filters/FilterChip'
 import '../../styles/components/filter.css'
 import '../../styles/users.css'
+import '../../styles/components/modal-form.css'
 import Modal from '../../components/Modal'
 import PageHeader from '../../components/PageHeader'
 import TableActionMenu from '../../components/TableActionMenu';
+import BadgePill from '../../components/common/BadgePill'
+import FormSearchField from '../../components/common/FormSearchField'
+import EmptyState from '../../components/common/EmptyState'
 
 // Định nghĩa các loại bộ lọc có thể có
 const FILTER_TYPES = {
@@ -167,32 +171,37 @@ function EditUserModal({ user, onClose, onSaved }) {
   if (!user) return null
   return (
     <Modal isOpen={!!user} onClose={onClose} title="Chỉnh sửa Người dùng" size="small" subtitle={user.email}>
-      <div className="modal-form-group">
-        <label>Tên đầy đủ</label>
-        <input value={form.fullName || ""} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className="input-field" />
-      </div>
-      <div className="modal-form-group">
-        <label>Email</label>
-        <input value={form.email || ""} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-field" disabled />
-      </div>
-      <div className="modal-form-group">
-        <label>Vai trò</label>
-        <select value={form.role || "user"} onChange={(e) => setForm({ ...form, role: e.target.value })} className="input-field">
-          <option value="user">Người dùng</option>
-          <option value="admin">Quản trị viên</option>
-        </select>
-      </div>
-      {/* Giả định thêm trường trạng thái/ban ở đây */}
-      <div className="modal-form-group">
-        <label>Tình trạng Khóa (Ban)</label>
-        <select
-          value={form.isBanned ? 'banned' : 'active'}
-          onChange={(e) => setForm({ ...form, isBanned: e.target.value === 'banned' })}
-          className="input-field"
-        >
-          <option value="active">Không bị khóa</option>
-          <option value="banned">Đã khóa (Banned)</option>
-        </select>
+      <div className="modal-form user-edit-form">
+        <div className="modal-form-section-card">
+          <div className="modal-form-grid">
+            <div className="modal-form-group">
+              <label className="form-label">Tên đầy đủ</label>
+              <input value={form.fullName || ""} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className="form-input" />
+            </div>
+            <div className="modal-form-group">
+              <label className="form-label">Email</label>
+              <input value={form.email || ""} onChange={(e) => setForm({ ...form, email: e.target.value })} className="form-input" disabled />
+            </div>
+            <div className="modal-form-group">
+              <label className="form-label">Vai trò</label>
+              <select value={form.role || "user"} onChange={(e) => setForm({ ...form, role: e.target.value })} className="form-input">
+                <option value="user">Người dùng</option>
+                <option value="admin">Quản trị viên</option>
+              </select>
+            </div>
+            <div className="modal-form-group">
+              <label className="form-label">Tình trạng Khóa (Ban)</label>
+              <select
+                value={form.isBanned ? 'banned' : 'active'}
+                onChange={(e) => setForm({ ...form, isBanned: e.target.value === 'banned' })}
+                className="form-input"
+              >
+                <option value="active">Không bị khóa</option>
+                <option value="banned">Đã khóa (Banned)</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
       <div className="modal-footer">
         <button className="button-secondary" onClick={onClose}>Hủy</button>
@@ -271,7 +280,7 @@ export default function Users() {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="admin-page">
       <PageHeader
         title="QUẢN LÝ NGƯỜI DÙNG"
         subtitle={`Tìm thấy ${filtered.length} trên tổng số ${users.length} người dùng`}
@@ -285,14 +294,14 @@ export default function Users() {
       <div className="search-filter-bar bg-white p-4 rounded-lg shadow-md mb-4" style={{ display: 'flex', gap: 10 }}>
 
         {/* Search Input */}
-        <input
-          type="text"
-          placeholder="Tìm kiếm theo Tên, Email..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="input-field"
-          style={{ flexGrow: 1, padding: '10px 12px' }}
-        />
+        <div style={{ flexGrow: 1 }}>
+          <FormSearchField
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm kiếm theo Tên, Email..."
+            icon={FiFilter}
+          />
+        </div>
 
         {/* Add Filter Button */}
         <button
@@ -330,10 +339,7 @@ export default function Users() {
       {/* --- Users Table --- */}
       <div className="table-section bg-white p-4 rounded-lg shadow-md overflow-x-auto">
         {filtered.length === 0 ? (
-          <div className="empty-state text-center py-10 text-gray-500">
-            <div className="text-4xl mb-3">🕵️</div>
-            <p>Không tìm thấy người dùng nào khớp với tiêu chí tìm kiếm và bộ lọc.</p>
-          </div>
+          <EmptyState icon="🕵️" message="Không tìm thấy người dùng nào khớp với tiêu chí tìm kiếm và bộ lọc." />
         ) : (
           <table className="table users-table">
             <thead>
@@ -369,18 +375,10 @@ export default function Users() {
                     </span>
                   </td>
                   <td style={tableCellStyle}>
-                    <span style={{
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      backgroundColor: u.isVerified ? '#10b9811A' : '#ef44441A',
-                      color: u.isVerified ? '#10b981' : '#ef4444',
-                      whiteSpace: 'nowrap',
-                      display: 'inline-block'
-                    }}>
-                      {u.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
-                    </span>
+                    <BadgePill
+                      label={u.isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+                      tone={u.isVerified ? 'success' : 'danger'}
+                    />
                   </td>
                   <td className="actions-cell" style={{ ...tableCellStyle, textAlign: 'center' }}>
                     <TableActionMenu
