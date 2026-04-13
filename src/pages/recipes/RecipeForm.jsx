@@ -208,74 +208,72 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
       size="large"
     >
       <div className="modal-form">
-        {/* Basic Information Grid */}
-        <div className="modal-form-grid">
-          <div className="modal-form-group">
-            <label className="form-label required">Tên Công thức</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              placeholder="Nhập tên công thức"
+        <div className="modal-form-section-card">
+          <div className="modal-form-section-title">Thông tin cơ bản</div>
+          <div className="modal-form-grid">
+            <div className="modal-form-group">
+              <label className="form-label required">Tên Công thức</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                placeholder="Nhập tên công thức"
+              />
+            </div>
+
+            <div className="modal-form-group">
+              <label className="form-label required">Danh mục</label>
+              <select
+                value={form.category}
+                onChange={e => setForm({ ...form, category: e.target.value })}
+              >
+                <option value="">-- Chọn danh mục --</option>
+                {categories.map(cat => (
+                  <option key={cat._id} value={cat.name}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="modal-form-group">
+              <label className="form-label">Độ Khó</label>
+              <select
+                value={form.difficulty}
+                onChange={e => setForm({ ...form, difficulty: e.target.value })}
+              >
+                <option value="easy">Dễ</option>
+                <option value="medium">Trung bình</option>
+                <option value="hard">Khó</option>
+              </select>
+            </div>
+
+            <div className="modal-form-group">
+              <label className="form-label">Nồng độ Cồn</label>
+              <select
+                value={form.alcoholLevel}
+                onChange={e => setForm({ ...form, alcoholLevel: e.target.value })}
+              >
+                <option value="none">Không</option>
+                <option value="low">Thấp</option>
+                <option value="medium">Trung bình</option>
+                <option value="high">Cao</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="modal-form-group full-width">
+            <label className="form-label">Mô tả</label>
+            <textarea
+              value={form.description}
+              onChange={e => setForm({ ...form, description: e.target.value })}
+              placeholder="Mô tả chi tiết về công thức"
+              rows={3}
             />
           </div>
-
-          <div className="modal-form-group">
-            <label className="form-label required">Danh mục</label>
-            <select
-              value={form.category}
-              onChange={e => setForm({ ...form, category: e.target.value })}
-            >
-              <option value="">-- Chọn danh mục --</option>
-              {categories.map(cat => (
-                <option key={cat._id} value={cat.name}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="modal-form-group">
-            <label className="form-label">Độ Khó</label>
-            <select
-              value={form.difficulty}
-              onChange={e => setForm({ ...form, difficulty: e.target.value })}
-            >
-              <option value="easy">Dễ</option>
-              <option value="medium">Trung bình</option>
-              <option value="hard">Khó</option>
-            </select>
-          </div>
-
-          <div className="modal-form-group">
-            <label className="form-label">Nồng độ Cồn</label>
-            <select
-              value={form.alcoholLevel}
-              onChange={e => setForm({ ...form, alcoholLevel: e.target.value })}
-            >
-              <option value="none">Không</option>
-              <option value="low">Thấp</option>
-              <option value="medium">Trung bình</option>
-              <option value="high">Cao</option>
-            </select>
-          </div>
         </div>
 
-        <div className="modal-form-group full-width">
-          <label className="form-label">Mô tả</label>
-          <textarea
-            value={form.description}
-            onChange={e => setForm({ ...form, description: e.target.value })}
-            placeholder="Mô tả chi tiết về công thức"
-            rows={3}
-          />
-        </div>
-
-
-        {/* Media Section */}
-        <div className="modal-form-section">
-          <label className="form-label">Media</label>
-        </div>
         <div className="modal-form-section-card">
-        <div className="modal-form-grid">
+          <div className="modal-form-section-title">Media</div>
+          <div className="modal-form-grid">
 
           {/* Image Upload */}
           <MediaUploadBox
@@ -322,16 +320,13 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
               style={{ display: 'none' }}
             />
           </MediaUploadBox>
-        </div>
+          </div>
         </div>
 
-        {/* Ingredients Section */}
-        <div className="modal-form-section">
-          <label className="form-label required">Nguyên liệu</label>
-        </div>
         <div className="modal-form-section-card recipe-ingredients-card">
+          <div className="modal-form-section-title">Nguyên liệu</div>
           <div className="recipe-list-actions">
-            <button onClick={addIngredient} className="button-secondary small-button">+ Thêm Nguyên liệu</button>
+            <button type="button" onClick={addIngredient} className="button-secondary small-button">+ Thêm nguyên liệu</button>
           </div>
           <div className="recipe-ingredients-header">
             <span>Tên Nguyên Liệu*</span>
@@ -369,6 +364,7 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
               <div></div>
 
               <button
+                type="button"
                 onClick={() => removeIngredient(index)}
                 className="small-icon-button danger"
                 disabled={form.ingredients.length === 1}
@@ -380,13 +376,10 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
           ))}
         </div>
 
-        {/* Steps Section */}
-        <div className="modal-form-section">
-          <label className="form-label required">Các bước thực hiện</label>
-        </div>
         <div className="modal-form-section-card recipe-steps-card">
+          <div className="modal-form-section-title">Các bước thực hiện</div>
           <div className="recipe-list-actions">
-            <button onClick={addStep} className="button-secondary small-button">+ Thêm Bước</button>
+            <button type="button" onClick={addStep} className="button-secondary small-button">+ Thêm bước</button>
           </div>
 
           <div className="recipe-steps-header">
@@ -405,6 +398,7 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
                 className="form-input"
               />
               <button
+                type="button"
                 onClick={() => removeStep(index)}
                 className="small-icon-button danger"
                 disabled={form.steps.length === 1}
@@ -431,6 +425,7 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
 
         {/* 5. Premium Toggle */}
         <div className="modal-form-section-card">
+          <div className="modal-form-section-title">Trạng thái cao cấp</div>
           <label className="payment-plan-popular-toggle">
             <input
               type="checkbox"
@@ -468,9 +463,7 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
 const MediaUploadBox = ({ label, preview, onButtonClick, Icon, children }) => (
   <div className="modal-form-group">
     <label className="form-label">{label}</label>
-    <div
-      className="recipe-media-shell"
-    >
+    <div className="recipe-media-shell">
       {children}
       {!preview && (
         <div className="recipe-media-empty">
@@ -480,6 +473,7 @@ const MediaUploadBox = ({ label, preview, onButtonClick, Icon, children }) => (
       )}
     </div>
     <button
+      type="button"
       onClick={onButtonClick}
       className="upload-button recipe-upload-button"
     >

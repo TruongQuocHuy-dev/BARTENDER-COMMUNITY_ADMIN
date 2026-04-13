@@ -9,6 +9,7 @@ import BadgePill from '../../components/common/BadgePill';
 import FormSearchField from '../../components/common/FormSearchField';
 import FormSelectField from '../../components/common/FormSelectField';
 import EmptyState from '../../components/common/EmptyState';
+import { BarChart3 } from 'lucide-react'
 
 // --- 1. Helper: Status Badge (Giữ nguyên) ---
 const StatusBadge = ({ status }) => {
@@ -201,10 +202,11 @@ export default function ReportsAndSupport() {
       <PageHeader
         title="QUẢN LÝ BÁO CÁO & HỖ TRỢ"
         subtitle={`Tổng hợp ${filtered.length} phiếu yêu cầu từ người dùng`}
+        icon={<BarChart3 size={26} />}
       />
 
       {/* --- THANH CÔNG CỤ (Search & Filter) --- */}
-      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100"
+      <div className="search-filter-bar"
         style={{
           display: 'flex',
           width: '100%',       // Đảm bảo chiếm hết chiều ngang
@@ -252,7 +254,7 @@ export default function ReportsAndSupport() {
       </div>
 
       {/* --- TABLE HIỂN THỊ --- */}
-      <div className="table-section bg-white p-0 rounded-lg shadow-md overflow-hidden border border-gray-100">
+      <div className="table-section">
         {loading ? (
           <div className="text-center py-12 text-gray-500">Đang tải dữ liệu...</div>
         ) : filtered.length === 0 ? (

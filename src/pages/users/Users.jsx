@@ -14,6 +14,7 @@ import TableActionMenu from '../../components/TableActionMenu';
 import BadgePill from '../../components/common/BadgePill'
 import FormSearchField from '../../components/common/FormSearchField'
 import EmptyState from '../../components/common/EmptyState'
+import { Users as UsersIcon } from 'lucide-react'
 
 // Định nghĩa các loại bộ lọc có thể có
 const FILTER_TYPES = {
@@ -173,6 +174,7 @@ function EditUserModal({ user, onClose, onSaved }) {
     <Modal isOpen={!!user} onClose={onClose} title="Chỉnh sửa Người dùng" size="small" subtitle={user.email}>
       <div className="modal-form user-edit-form">
         <div className="modal-form-section-card">
+          <div className="modal-form-section-title">Thông tin người dùng</div>
           <div className="modal-form-grid">
             <div className="modal-form-group">
               <label className="form-label">Tên đầy đủ</label>
@@ -284,6 +286,7 @@ export default function Users() {
       <PageHeader
         title="QUẢN LÝ NGƯỜI DÙNG"
         subtitle={`Tìm thấy ${filtered.length} trên tổng số ${users.length} người dùng`}
+        icon={<UsersIcon size={26} />}
         actions={(
           <button className="button-danger" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <FiTrash2 size={16} /> <span>Xóa hàng loạt</span>

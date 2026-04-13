@@ -5,6 +5,7 @@ import {
     FiCheck, FiX, FiChevronLeft, FiChevronRight,
     FiClock, FiRefreshCw
 } from 'react-icons/fi'
+import { UtensilsCrossed } from 'lucide-react'
 import { Utensils, Zap, Star, Video, Image, ListOrdered } from 'lucide-react';
 import RecipeForm from './RecipeForm'
 import PageHeader from '../../components/PageHeader'
@@ -258,6 +259,7 @@ export default function Recipes() {
                         <FiPlus size={16} /> Thêm Mới
                     </button>
                 )}
+                icon={<UtensilsCrossed size={26} />}
             />
 
             {/* --- THANH TÌM KIẾM & BỘ LỌC --- */}

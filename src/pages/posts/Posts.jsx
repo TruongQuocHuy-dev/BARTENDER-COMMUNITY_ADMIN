@@ -7,6 +7,7 @@ import PageHeader from '../../components/PageHeader'
 import TableActionMenu from '../../components/TableActionMenu';
 import FormSearchField from '../../components/common/FormSearchField';
 import EmptyState from '../../components/common/EmptyState';
+import { FileText } from 'lucide-react'
 
 // --- 1. DetailModal (Đã thiết kế lại hoàn toàn) ---
 function DetailModal({ item, onClose }) {
@@ -19,20 +20,21 @@ function DetailModal({ item, onClose }) {
       title="Chi tiết Bài viết"
       size="large" // Cần size lớn để xem media
     >
+      <div className="modal-form-section-card">
       {/* Phần Caption */}
-      <div style={{ marginBottom: 20, borderBottom: '1px solid #eee', paddingBottom: 15 }}>
+      <div className="modal-form-group" style={{ marginBottom: 18 }}>
         <p style={{
           fontSize: '1rem',
-          color: '#333',
-          lineHeight: 1.6,
-          whiteSpace: 'pre-wrap' // Giữ định dạng xuống dòng
+          color: '#334155',
+          lineHeight: 1.7,
+          whiteSpace: 'pre-wrap'
         }}>
           {item.caption || "Không có nội dung."}
         </p>
       </div>
 
       {/* Phần Media (Hiển thị ảnh/video) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+      <div className="modal-form-grid" style={{ marginBottom: 18 }}>
         {/* Image Preview */}
         <div className="media-preview-box">
           <label className="form-label">Hình ảnh</label>
@@ -69,9 +71,11 @@ function DetailModal({ item, onClose }) {
       </div>
 
       {/* Phần Stats (Grid) */}
-      <div className="modal-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="modal-grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: 4 }}>
         <DetailItem label="Tác giả" value={item.author?.fullName} />
         <DetailItem label="Lượt thích" value={item.likes?.length || 0} icon={FiHeart} />
+      </div>
+
       </div>
 
       <div className="modal-footer" style={{ marginTop: 20 }}>
@@ -120,6 +124,7 @@ export default function Posts() {
       <PageHeader
         title="QUẢN LÝ BÀI VIẾT"
         subtitle={`Tổng ${items.length} bài viết`}
+        icon={<FileText size={26} />}
         actions={(
           <button className="button-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }} disabled>
             <FiPlus size={16} /> New (Tạm khóa)
@@ -128,7 +133,7 @@ export default function Posts() {
 
       {/* --- Search Bar --- */}
       {/* --- Search Bar --- */}
-      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-md mb-6"
+      <div className="search-filter-bar"
         style={{ display: 'flex', alignItems: 'center' }}>
 
         {/* Wrapper cho ô tìm kiếm: Phải có width 100% */}
@@ -143,7 +148,7 @@ export default function Posts() {
       </div>
 
       {/* --- Posts Table --- */}
-      <div className="table-section bg-white p-4 rounded-lg shadow-md overflow-x-auto">
+      <div className="table-section">
         {loading ? (
           <div className="text-center py-10 text-gray-500">Đang tải dữ liệu...</div>
         ) : filtered.length === 0 ? (

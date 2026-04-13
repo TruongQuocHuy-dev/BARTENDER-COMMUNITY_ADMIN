@@ -108,10 +108,11 @@ function EditPlanModal({ plan, onClose, onSaved }) {
   }
 
   return (
-    <Modal isOpen={!!plan} onClose={onClose} title={form._id ? 'Sửa Gói' : 'Tạo Gói Mới'} size="medium">
+    <Modal isOpen={!!plan} onClose={onClose} title={form._id ? 'Sửa Gói' : 'Tạo Gói Mới'} size="large">
       <div className="modal-form payment-plan-form">
         <div className="modal-form-section-card">
-          <div className="modal-form-grid">
+          <div className="modal-form-section-title">Thông tin gói</div>
+          <div className="modal-form-grid payment-form-main-grid">
           <div className="modal-form-group">
             <label className="form-label">Tên Gói</label>
             <input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} className="form-input" placeholder="Premium Tháng" />
@@ -152,6 +153,7 @@ function EditPlanModal({ plan, onClose, onSaved }) {
         </div>
 
         <div className="modal-form-section-card">
+        <div className="modal-form-section-title">Tính năng và trạng thái</div>
         <div className="modal-form-group">
           <label className="form-label">Tính năng</label>
           <div className="payment-plan-feature-input-row">

@@ -8,6 +8,7 @@ import PageHeader from '../../components/PageHeader' // Import PageHeader
 import TableActionMenu from '../../components/TableActionMenu';
 import BadgePill from '../../components/common/BadgePill';
 import FormSearchField from '../../components/common/FormSearchField';
+import { Image as BannerIcon } from 'lucide-react'
 
 // --- Helper Component: Status Badge ---
 const StatusBadge = ({ status }) => {
@@ -92,6 +93,7 @@ export default function Banners() {
       <PageHeader
         title="QUẢN LÝ QUẢNG CÁO"
         subtitle={`Tổng ${items.length} banners`}
+        icon={<BannerIcon size={26} />}
         actions={(
           <button onClick={() => setEditing({})} className="button-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <FiPlus size={16} /> Thêm Banner

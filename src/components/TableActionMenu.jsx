@@ -3,7 +3,42 @@ import { MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
 
 const TableActionMenu = ({ onEdit, onDelete, onView, customActions = [] }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [menuStyle, setMenuStyle] = useState(null);
     const menuRef = useRef(null);
+    const triggerRef = useRef(null);
+
+    const updateMenuPosition = () => {
+        if (!triggerRef.current) return;
+
+        const rect = triggerRef.current.getBoundingClientRect();
+        const menuWidth = 180;
+        const menuHeight = 220;
+        const spacing = 6;
+        const viewportPadding = 8;
+
+        const rawTop = rect.bottom + spacing;
+
+        const top = Math.max(
+            viewportPadding,
+            Math.min(rawTop, window.innerHeight - menuHeight - viewportPadding)
+        );
+
+        const rawLeft = rect.right - menuWidth;
+        const left = Math.max(
+            viewportPadding,
+            Math.min(rawLeft, window.innerWidth - menuWidth - viewportPadding)
+        );
+
+        setMenuStyle({
+            position: 'fixed',
+            top,
+            left,
+            right: 'auto',
+            bottom: 'auto',
+            width: menuWidth,
+            zIndex: 2000,
+        });
+    };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -18,13 +53,31 @@ const TableActionMenu = ({ onEdit, onDelete, onView, customActions = [] }) => {
         };
     }, []);
 
+    useEffect(() => {
+        if (!isOpen) return;
+
+        updateMenuPosition();
+
+        const handleViewportChange = () => updateMenuPosition();
+        window.addEventListener('resize', handleViewportChange);
+        window.addEventListener('scroll', handleViewportChange, true);
+
+        return () => {
+            window.removeEventListener('resize', handleViewportChange);
+            window.removeEventListener('scroll', handleViewportChange, true);
+        };
+    }, [isOpen]);
+
     return (
-        <div className="table-action-menu-container" ref={menuRef} style={{ position: 'relative', zIndex: isOpen ? 100 : 'auto' }}>
+        <div className={`table-action-menu-container ${isOpen ? 'open' : ''}`} ref={menuRef}>
             <button
+                ref={triggerRef}
                 className="action-icon-btn"
                 onClick={(e) => {
                     e.stopPropagation();
-                    setIsOpen(!isOpen);
+                    const next = !isOpen;
+                    setIsOpen(next);
+                    if (next) updateMenuPosition();
                 }}
                 title="Thao tác"
             >
@@ -32,7 +85,7 @@ const TableActionMenu = ({ onEdit, onDelete, onView, customActions = [] }) => {
             </button>
 
             {isOpen && (
-                <div className="action-dropdown-menu">
+                <div className="action-dropdown-menu" style={menuStyle || undefined}>
                     {onView && (
                         <button
                             className="action-dropdown-item"

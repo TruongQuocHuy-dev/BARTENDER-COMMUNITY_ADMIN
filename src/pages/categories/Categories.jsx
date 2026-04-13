@@ -5,6 +5,7 @@ import { FiEdit, FiTrash2, FiEye, FiPlus, FiSearch } from 'react-icons/fi'
 import Modal from '../../components/Modal'
 import PageHeader from '../../components/PageHeader'
 import { Image, AlertCircle, Upload } from 'lucide-react';
+import { FolderOpen } from 'lucide-react'
 import TableActionMenu from '../../components/TableActionMenu';
 import '../../styles/components/modal-form.css';
 
@@ -78,11 +79,12 @@ function EditCategoryModal({ cat, onClose, onSaved }) {
       isOpen={Boolean(cat)}
       onClose={onClose}
       title={form._id ? 'Chỉnh sửa Danh mục' : 'Thêm Danh mục Mới'}
-      size="small"
+      size="medium"
     >
       <div className="modal-form">
         <div className="modal-form-section-card">
-          <div className="modal-form-grid">
+          <div className="modal-form-section-title">Thông tin danh mục</div>
+          <div className="modal-form-grid category-form-grid">
         <div>
           {/* 1. Category Name Input */}
           <div className="modal-form-group">
@@ -290,6 +292,7 @@ export default function Categories() {
       <PageHeader
         title="QUẢN LÝ DANH MỤC"
         subtitle={`Tổng ${cats.length} danh mục`}
+        icon={<FolderOpen size={26} />}
         actions={(
           <button className="button-primary" onClick={() => setEditing({})} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <FiPlus size={16} /> Thêm Danh mục

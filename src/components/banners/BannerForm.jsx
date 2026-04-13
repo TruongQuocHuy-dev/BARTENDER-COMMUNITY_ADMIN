@@ -1,7 +1,38 @@
 import React, { useState, useRef, useEffect } from 'react';
 import api from '../../api/client';
-import '../../styles/components/banner-form.css';
 import { FiX, FiImage } from 'react-icons/fi';
+
+const DEFAULT_BANNER_FORM = {
+  title: '',
+  description: '',
+  link: 'http://',
+  status: 'active',
+  priority: 0,
+  highlights: [''],
+  contentDetail: '',
+  startDate: '',
+  endDate: ''
+};
+
+function normalizeBannerFormData(banner) {
+  if (!banner) {
+    return { ...DEFAULT_BANNER_FORM };
+  }
+
+  return {
+    ...DEFAULT_BANNER_FORM,
+    ...banner,
+    title: banner.title ?? '',
+    description: banner.description ?? '',
+    link: banner.link ?? 'http://',
+    status: banner.status ?? 'active',
+    priority: banner.priority ?? 0,
+    contentDetail: banner.contentDetail ?? '',
+    startDate: banner.startDate ?? '',
+    endDate: banner.endDate ?? '',
+    highlights: Array.isArray(banner.highlights) && banner.highlights.length > 0 ? banner.highlights : ['']
+  };
+}
 
 const MediaUploadBox = ({ label, preview, onButtonClick, Icon, children }) => (
   <div className="modal-form-group">
@@ -26,27 +57,15 @@ const MediaUploadBox = ({ label, preview, onButtonClick, Icon, children }) => (
 );
 
 export default function BannerForm({ banner, onClose, onSaved }) {
-  const [form, setForm] = useState(banner?._id ? banner : {
-    title: '',
-    description: '',
-    link: 'http://',
-    status: 'active',
-    priority: 0,
-    highlights: [''],
-    contentDetail: '',
-    startDate: '',
-    endDate: ''
-  });
+  const [form, setForm] = useState(() => normalizeBannerFormData(banner));
   const [imagePreview, setImagePreview] = useState(banner?.imageUrl || '');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const imageRef = useRef();
 
   useEffect(() => {
-    if (banner) {
-      setForm({ ...banner, highlights: banner.highlights || [''] });
-      setImagePreview(banner.imageUrl || '');
-    }
+    setForm(normalizeBannerFormData(banner));
+    setImagePreview(banner?.imageUrl || '');
   }, [banner]);
 
   const handleImageChange = (e) => {
@@ -131,7 +150,8 @@ export default function BannerForm({ banner, onClose, onSaved }) {
       <form onSubmit={save}>
         {/* 2 Column Layout: Left fields, Right image */}
         <div className="modal-form-section-card">
-        <div className="modal-form-grid">
+        <div className="modal-form-section-title">Thông tin banner</div>
+        <div className="modal-form-grid banner-form-main-grid">
 
           {/* LEFT COLUMN - All Fields */}
           <div>
@@ -139,7 +159,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
               <label className="form-label required">Tiêu đề</label>
               <input
                 type="text"
-                value={form.title}
+                value={form.title ?? ''}
                 onChange={e => setForm({ ...form, title: e.target.value })}
                 placeholder="Nhập tiêu đề banner"
                 required
@@ -150,7 +170,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
               <label className="form-label required">Link liên kết</label>
               <input
                 type="url"
-                value={form.link}
+                value={form.link ?? ''}
                 onChange={e => setForm({ ...form, link: e.target.value })}
                 placeholder="http://..."
                 required
@@ -161,7 +181,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
               <div className="modal-form-group">
                 <label className="form-label">Trạng thái</label>
                 <select
-                  value={form.status}
+                  value={form.status ?? 'active'}
                   onChange={e => setForm({ ...form, status: e.target.value })}
                 >
                   <option value="active">Hoạt động</option>
@@ -173,7 +193,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 <label className="form-label">Độ ưu tiên</label>
                 <input
                   type="number"
-                  value={form.priority}
+                  value={form.priority ?? 0}
                   onChange={e => setForm({ ...form, priority: e.target.value })}
                   min="0"
                 />
@@ -185,7 +205,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 <label className="form-label">Ngày bắt đầu</label>
                 <input
                   type="date"
-                  value={form.startDate?.split('T')[0] || ''}
+                  value={(form.startDate || '').split('T')[0] || ''}
                   onChange={e => setForm({ ...form, startDate: e.target.value })}
                 />
               </div>
@@ -194,7 +214,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 <label className="form-label">Ngày kết thúc</label>
                 <input
                   type="date"
-                  value={form.endDate?.split('T')[0] || ''}
+                  value={(form.endDate || '').split('T')[0] || ''}
                   onChange={e => setForm({ ...form, endDate: e.target.value })}
                 />
               </div>
@@ -203,7 +223,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
             <div className="modal-form-group">
               <label className="form-label">Mô tả ngắn</label>
               <textarea
-                value={form.description}
+                value={form.description ?? ''}
                 onChange={e => setForm({ ...form, description: e.target.value })}
                 placeholder="Mô tả ngắn hiển thị trên banner"
                 rows={2}
@@ -240,7 +260,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
             <div className="modal-form-group">
               <label className="form-label">Nội dung Chi tiết (tùy chọn)</label>
               <textarea
-                value={form.contentDetail}
+                value={form.contentDetail ?? ''}
                 onChange={e => setForm({ ...form, contentDetail: e.target.value })}
                 placeholder="Nội dung chi tiết (nếu banner này mở ra một trang chi tiết)"
                 rows={5}
@@ -252,7 +272,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
 
         {/* Highlights - Full Width Below */}
         <div className="modal-form-section-card banner-highlights-section">
-          <label className="form-label">Điểm nổi bật (tùy chọn)</label>
+          <div className="modal-form-section-title">Điểm nổi bật</div>
           <div className="modal-form-list banner-highlights-list">
             <div className="banner-highlights-add-row">
               <button type="button" onClick={addHighlight} className="button-secondary">+ Thêm</button>
@@ -260,7 +280,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
             {form.highlights?.map((highlight, i) => (
               <div key={i} className="banner-highlight-row">
                 <input
-                  value={highlight}
+                  value={highlight ?? ''}
                   onChange={e => updateHighlight(i, e.target.value)}
                   placeholder={`Điểm nổi bật ${i + 1}`}
                   className="form-input"
