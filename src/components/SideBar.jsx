@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom"
 import {
   LayoutDashboard, Users, Utensils, FolderOpen,
   Image as ImageIcon, FileText, AlertCircle, CreditCard,
-  ChevronLeft, ChevronRight, Coffee, X, BarChart3, Bell
+  ChevronLeft, ChevronRight, Coffee, X, BarChart3, Bell, Settings
 } from "lucide-react"
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
@@ -52,6 +52,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
       items: [
         { path: "/users", label: "Nguoi dung", icon: Users },
         { path: "/notifications", label: "Thong bao", icon: Bell },
+        { path: "/settings", label: "Cai dat", icon: Settings },
         { path: "/payment-methods", label: "Goi thanh toan", icon: CreditCard },
       ],
     },

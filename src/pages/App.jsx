@@ -16,6 +16,7 @@ import Reports from "./reports/Reports"
 import Notifications from "./notifications/Notifications"
 import PaymentMethods from "./payment-methods/PaymentMethods"
 import Profile from "./profile/Profile"
+import Settings from "./settings/Settings"
 import Login from "./auth/Login"
 import Header from "../components/Header"
 import Sidebar from "../components/SideBar"
@@ -90,6 +91,7 @@ export default function App() {
         <Route path="/notifications" element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
         <Route path="/payment-methods" element={<ProtectedLayout><PaymentMethods /></ProtectedLayout>} />
         <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
+        <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
       </Routes>
     </AuthProvider>
   )
