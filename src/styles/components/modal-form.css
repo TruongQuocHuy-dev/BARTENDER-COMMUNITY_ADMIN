@@ -60,7 +60,10 @@
 .modal-form-group input[type="text"],
 .modal-form-group input[type="email"],
 .modal-form-group input[type="number"],
-.modal-form-group input[type="url"] {
+.modal-form-group input[type="url"],
+.modal-form-group input[type="date"],
+.modal-form-group input[type="time"],
+.modal-form .form-input {
   width: 100%;
   min-height: 42px;
   padding: 10px 14px;
@@ -99,6 +102,27 @@
   cursor: pointer;
 }
 
+.modal-form select.form-input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 14px;
+  padding-right: 40px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background-color: var(--bg-white);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
 .modal-form-group textarea {
   width: 100%;
   padding: 10px 14px;
@@ -113,7 +137,8 @@
 
 .modal-form-group input:focus,
 .modal-form-group select:focus,
-.modal-form-group textarea:focus {
+.modal-form-group textarea:focus,
+.modal-form .form-input:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
@@ -470,7 +495,7 @@
 .recipe-ingredients-header,
 .recipe-ingredients-row {
   display: grid;
-  grid-template-columns: 3fr 0.8fr 24px 1.2fr 24px 48px;
+  grid-template-columns: minmax(0, 2.4fr) minmax(90px, 0.9fr) minmax(120px, 1.1fr) 48px;
   gap: 12px;
 }
 
@@ -484,6 +509,7 @@
 }
 
 .recipe-ingredients-row {
+  align-items: center;
   margin-bottom: 10px;
 }
 
@@ -502,8 +528,13 @@
   display: grid;
   grid-template-columns: 36px 1fr 48px;
   gap: 8px;
-  align-items: center;
+  align-items: start;
   margin-bottom: 8px;
+}
+
+.recipe-step-row textarea.form-input {
+  min-height: 42px;
+  resize: vertical;
 }
 
 .recipe-step-index {

@@ -162,6 +162,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 value={form.title ?? ''}
                 onChange={e => setForm({ ...form, title: e.target.value })}
                 placeholder="Nhập tiêu đề banner"
+                className="form-input"
                 required
               />
             </div>
@@ -173,6 +174,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 value={form.link ?? ''}
                 onChange={e => setForm({ ...form, link: e.target.value })}
                 placeholder="http://..."
+                className="form-input"
                 required
               />
             </div>
@@ -183,6 +185,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 <select
                   value={form.status ?? 'active'}
                   onChange={e => setForm({ ...form, status: e.target.value })}
+                  className="form-input"
                 >
                   <option value="active">Hoạt động</option>
                   <option value="inactive">Không hoạt động</option>
@@ -195,6 +198,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                   type="number"
                   value={form.priority ?? 0}
                   onChange={e => setForm({ ...form, priority: e.target.value })}
+                  className="form-input"
                   min="0"
                 />
               </div>
@@ -207,6 +211,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                   type="date"
                   value={(form.startDate || '').split('T')[0] || ''}
                   onChange={e => setForm({ ...form, startDate: e.target.value })}
+                  className="form-input"
                 />
               </div>
 
@@ -216,6 +221,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                   type="date"
                   value={(form.endDate || '').split('T')[0] || ''}
                   onChange={e => setForm({ ...form, endDate: e.target.value })}
+                  className="form-input"
                 />
               </div>
             </div>
@@ -226,6 +232,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 value={form.description ?? ''}
                 onChange={e => setForm({ ...form, description: e.target.value })}
                 placeholder="Mô tả ngắn hiển thị trên banner"
+                className="form-input"
                 rows={2}
                 required
               />
@@ -263,6 +270,7 @@ export default function BannerForm({ banner, onClose, onSaved }) {
                 value={form.contentDetail ?? ''}
                 onChange={e => setForm({ ...form, contentDetail: e.target.value })}
                 placeholder="Nội dung chi tiết (nếu banner này mở ra một trang chi tiết)"
+                className="form-input"
                 rows={5}
               />
             </div>

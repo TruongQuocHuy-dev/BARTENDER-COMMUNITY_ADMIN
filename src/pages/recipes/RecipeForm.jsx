@@ -331,9 +331,7 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
           <div className="recipe-ingredients-header">
             <span>Tên Nguyên Liệu*</span>
             <span>Số Lượng</span>
-            <span></span>
             <span>Đơn Vị</span>
-            <span></span>
             <span></span>
           </div>
           {form.ingredients.map((ing, index) => (
@@ -351,24 +349,20 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
                 className="form-input"
                 type="number"
               />
-              <div></div>
-              <div>
-                <input
-                  value={ing.unit}
-                  onChange={e => updateIngredient(index, 'unit', e.target.value)}
-                  placeholder="Đơn vị"
-                  className="form-input"
-                  list="unit-suggestions"
-                />
-              </div>
-              <div></div>
+              <input
+                value={ing.unit}
+                onChange={e => updateIngredient(index, 'unit', e.target.value)}
+                placeholder="Đơn vị"
+                className="form-input"
+                list="unit-suggestions"
+              />
 
               <button
                 type="button"
                 onClick={() => removeIngredient(index)}
                 className="small-icon-button danger"
                 disabled={form.ingredients.length === 1}
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: 48, height: 42 }}
               >
                 <FiX size={16} />
               </button>
@@ -391,11 +385,12 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
           {form.steps.map((step, index) => (
             <div key={index} className="recipe-step-row">
               <div className="recipe-step-index">{index + 1}.</div>
-              <input
+              <textarea
                 value={step}
                 onChange={e => updateStep(index, e.target.value)}
                 placeholder={`Mô tả bước ${index + 1}`}
                 className="form-input"
+                rows={2}
               />
               <button
                 type="button"

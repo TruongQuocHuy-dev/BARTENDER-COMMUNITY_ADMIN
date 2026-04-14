@@ -1,80 +1,101 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import api from '../../api/client'
-import { FiEye, FiEdit, FiTrash2, FiPlus, FiSearch, FiX, FiCheck, FiStar } from 'react-icons/fi'
+import {
+  FiCheck,
+  FiEdit,
+  FiEye,
+  FiDollarSign,
+  FiPlus,
+  FiSearch,
+  FiStar,
+  FiTrash2,
+  FiX,
+  FiGrid,
+} from 'react-icons/fi'
 import Modal from '../../components/Modal'
 import PageHeader from '../../components/PageHeader'
 import '../../styles/components/modal-form.css'
-import TableActionMenu from '../../components/TableActionMenu';
-import FormSearchField from '../../components/common/FormSearchField';
-import FormSelectField from '../../components/common/FormSelectField';
-import EmptyState from '../../components/common/EmptyState';
+import TableActionMenu from '../../components/TableActionMenu'
+import FormSearchField from '../../components/common/FormSearchField'
+import FormSelectField from '../../components/common/FormSelectField'
+import EmptyState from '../../components/common/EmptyState'
+import PlanStatCard from '../../components/payment-plans/PlanStatCard'
+import PlanPill from '../../components/payment-plans/PlanPill'
 
-// ... (Giữ nguyên các hàm Helper: formatCurrency, PopularBadge, DetailItem...)
 const formatCurrency = (value, currency = 'USD') => {
-  const style = currency === 'VND' ? 'vi-VN' : 'en-US';
-  return new Intl.NumberFormat(style, {
+  const locale = currency === 'VND' ? 'vi-VN' : 'en-US'
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: currency,
-    maximumFractionDigits: 0
-  }).format(value);
-};
+    currency,
+    maximumFractionDigits: 0,
+  }).format(value || 0)
+}
+
+const tierLabel = (tier) => {
+  if (tier === 'premium') return 'Cao cấp'
+  if (tier === 'free') return 'Miễn phí'
+  return tier || 'Khác'
+}
+
+const cycleLabel = (cycle) => {
+  if (cycle === 'monthly') return 'Hàng tháng'
+  if (cycle === 'yearly') return 'Hàng năm'
+  return cycle || 'Khác'
+}
 
 const PopularBadge = ({ isPopular }) => {
-  if (!isPopular) {
-    return <span style={{ color: '#9ca3af', fontSize: 13 }}>Không</span>;
-  }
-  return (
-    <span style={{
-      padding: '4px 8px',
-      borderRadius: '12px',
-      fontSize: '12px',
-      fontWeight: '600',
-      backgroundColor: '#fef3c7',
-      color: '#b45309',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '4px'
-    }}>
-      <FiStar size={14} />
-      Phổ biến
-    </span>
-  );
-};
+  if (!isPopular) return <PlanPill tone="neutral">Tiêu chuẩn</PlanPill>
 
-// ... (Giữ nguyên DetailModal và DetailItem)
+  return (
+    <PlanPill tone="warning">
+      <FiStar size={13} />
+      Phổ biến
+    </PlanPill>
+  )
+}
+
 const DetailItem = ({ label, value }) => (
-  <div className="modal-field" style={{ padding: 8, background: '#f9fafb', borderRadius: 4 }}>
-    <span className="modal-field-label" style={{ fontSize: 13, color: '#6b7280' }}>
-      {label}
-    </span>
-    <span className="modal-field-value" style={{ fontWeight: 600, color: '#1f2937' }}>{value}</span>
+  <div className="plan-detail-item">
+    <span className="plan-detail-label">{label}</span>
+    <span className="plan-detail-value">{value}</span>
   </div>
-);
+)
 
 function DetailModal({ item, onClose }) {
   if (!item) return null
+
   return (
-    <Modal isOpen={!!item} onClose={onClose} title={item.name} size="small" subtitle={`${item.tier === 'premium' ? 'Cao cấp' : item.tier === 'free' ? 'Miễn phí' : item.tier} • ${item.billingCycle === 'monthly' ? 'Hàng tháng' : item.billingCycle === 'yearly' ? 'Hàng năm' : item.billingCycle}`}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-        <div style={{ width: '48%' }}><DetailItem label="Hạng" value={item.tier === 'premium' ? 'Cao cấp' : item.tier === 'free' ? 'Miễn phí' : item.tier} /></div>
-        <div style={{ width: '48%' }}><DetailItem label="Chu kỳ" value={item.billingCycle === 'monthly' ? 'Hàng tháng' : item.billingCycle === 'yearly' ? 'Hàng năm' : item.billingCycle} /></div>
-        <div style={{ width: '48%' }}><DetailItem label="Giá" value={formatCurrency(item.price, item.currency)} /></div>
-        <div style={{ width: '48%' }}><DetailItem label="Độ Phổ biến" value={<PopularBadge isPopular={item.popularPlan} />} /></div>
+    <Modal
+      isOpen={!!item}
+      onClose={onClose}
+      title={item.name}
+      size="small"
+      subtitle={`${tierLabel(item.tier)} • ${cycleLabel(item.billingCycle)}`}
+    >
+      <div className="plan-detail-grid">
+        <DetailItem label="Hạng" value={tierLabel(item.tier)} />
+        <DetailItem label="Chu kỳ" value={cycleLabel(item.billingCycle)} />
+        <DetailItem label="Giá" value={formatCurrency(item.price, item.currency)} />
+        <DetailItem label="Trạng thái" value={item.popularPlan ? 'Phổ biến' : 'Tiêu chuẩn'} />
       </div>
 
-      <h4 style={{ marginTop: 16, marginBottom: 8, fontSize: 16 }}>Tính năng</h4>
-      {Array.isArray(item.features) && item.features.length > 0 ? (
-        <ul style={{ marginTop: 8, paddingLeft: 0, listStyle: 'none', background: '#f9fafb', padding: 12, borderRadius: 6 }}>
-          {item.features.map((f, i) => (
-            <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-              <FiCheck size={16} style={{ color: '#10b981' }} />
-              <span>{f}</span>
-            </li>
-          ))}
-        </ul>
-      ) : <p style={{ color: '#9ca3af' }}>Không có tính năng nào.</p>}
+      <div className="plan-detail-section">
+        <h4>Tính năng</h4>
+        {Array.isArray(item.features) && item.features.length > 0 ? (
+          <ul className="plan-feature-list">
+            {item.features.map((feature, index) => (
+              <li key={index}>
+                <FiCheck size={15} />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="plan-muted-text">Không có tính năng nào.</p>
+        )}
+      </div>
 
-      <div className="modal-footer" style={{ marginTop: 20 }}>
+      <div className="modal-footer">
         <button className="button-primary" onClick={onClose}>Đóng</button>
       </div>
     </Modal>
@@ -82,19 +103,48 @@ function DetailModal({ item, onClose }) {
 }
 
 function EditPlanModal({ plan, onClose, onSaved }) {
-  const [form, setForm] = useState(plan || { tier: 'premium', billingCycle: 'monthly', currency: 'VND', price: 0, features: [], popularPlan: false, name: '', planId: '' })
+  const [form, setForm] = useState(
+    plan || {
+      tier: 'premium',
+      billingCycle: 'monthly',
+      currency: 'VND',
+      price: 0,
+      features: [],
+      popularPlan: false,
+      name: '',
+      planId: '',
+    },
+  )
   const [featureInput, setFeatureInput] = useState('')
+
   useEffect(() => {
-    const emptyPlan = { tier: 'premium', billingCycle: 'monthly', currency: 'VND', price: 0, features: [], popularPlan: false, name: '', planId: '' };
-    setForm(plan?._id ? plan : emptyPlan);
+    const emptyPlan = {
+      tier: 'premium',
+      billingCycle: 'monthly',
+      currency: 'VND',
+      price: 0,
+      features: [],
+      popularPlan: false,
+      name: '',
+      planId: '',
+    }
+    setForm(plan?._id ? plan : emptyPlan)
+    setFeatureInput('')
   }, [plan])
 
   if (!plan) return null
 
   const addFeature = () => {
-    const v = featureInput.trim(); if (!v) return; setForm(prev => ({ ...prev, features: [...(prev.features || []), v] })); setFeatureInput('')
+    const nextValue = featureInput.trim()
+    if (!nextValue) return
+    setForm((prev) => ({ ...prev, features: [...(prev.features || []), nextValue] }))
+    setFeatureInput('')
   }
-  const removeFeature = (idx) => setForm(prev => ({ ...prev, features: prev.features.filter((_, i) => i !== idx) }))
+
+  const removeFeature = (index) => {
+    setForm((prev) => ({ ...prev, features: prev.features.filter((_, featureIndex) => featureIndex !== index) }))
+  }
+
   const save = async () => {
     const payload = { ...form }
     try {
@@ -103,86 +153,160 @@ function EditPlanModal({ plan, onClose, onSaved }) {
       } else {
         await api.post('/v1/subscription-plans', payload)
       }
-      onSaved(); onClose()
-    } catch (e) { console.error(e) }
+      onSaved()
+      onClose()
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   return (
-    <Modal isOpen={!!plan} onClose={onClose} title={form._id ? 'Sửa Gói' : 'Tạo Gói Mới'} size="large">
-      <div className="modal-form payment-plan-form">
-        <div className="modal-form-section-card">
-          <div className="modal-form-section-title">Thông tin gói</div>
-          <div className="modal-form-grid payment-form-main-grid">
-          <div className="modal-form-group">
-            <label className="form-label">Tên Gói</label>
-            <input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} className="form-input" placeholder="Premium Tháng" />
+    <Modal
+      isOpen={!!plan}
+      onClose={onClose}
+      title={form._id ? 'Chỉnh sửa gói' : 'Tạo gói thanh toán'}
+      size="large"
+      subtitle="Cập nhật thông tin gói trước khi lưu"
+    >
+      <div className="plan-editor-shell">
+        <div className="modal-form payment-plan-form plan-editor-form">
+          <div className="modal-form-section-card">
+            <div className="modal-form-section-title">Thông tin gói</div>
+            <div className="modal-form-grid payment-form-main-grid">
+              <div className="modal-form-group">
+                <label className="form-label">Tên gói</label>
+                <input
+                  value={form.name || ''}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  className="form-input"
+                  placeholder="Premium Tháng"
+                />
+              </div>
+              <div className="modal-form-group">
+                <label className="form-label">Plan ID</label>
+                <input
+                  value={form.planId || ''}
+                  onChange={(event) => setForm({ ...form, planId: event.target.value })}
+                  disabled={!!form._id}
+                  className="form-input"
+                  placeholder="plan_monthly_123"
+                />
+              </div>
+            </div>
+
+            <div className="modal-form-grid">
+              <div className="modal-form-group">
+                <label className="form-label">Hạng</label>
+                <select value={form.tier || 'premium'} onChange={(event) => setForm({ ...form, tier: event.target.value })} className="form-input">
+                  <option value="free">Miễn phí</option>
+                  <option value="premium">Cao cấp</option>
+                </select>
+              </div>
+              <div className="modal-form-group">
+                <label className="form-label">Chu kỳ</label>
+                <select
+                  value={form.billingCycle || 'monthly'}
+                  onChange={(event) => setForm({ ...form, billingCycle: event.target.value })}
+                  className="form-input"
+                >
+                  <option value="monthly">Hàng tháng</option>
+                  <option value="yearly">Hàng năm</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="modal-form-grid">
+              <div className="modal-form-group">
+                <label className="form-label">Giá</label>
+                <input
+                  type="number"
+                  value={form.price ?? 0}
+                  onChange={(event) => setForm({ ...form, price: Number(event.target.value) })}
+                  className="form-input"
+                />
+              </div>
+              <div className="modal-form-group">
+                <label className="form-label">Tiền tệ</label>
+                <input
+                  value={form.currency || 'VND'}
+                  onChange={(event) => setForm({ ...form, currency: event.target.value })}
+                  className="form-input"
+                  placeholder="VND, USD..."
+                />
+              </div>
+            </div>
           </div>
-          <div className="modal-form-group">
-            <label className="form-label">Plan ID (Stripe/Momo...)</label>
-            <input value={form.planId || ''} onChange={e => setForm({ ...form, planId: e.target.value })} disabled={!!form._id} className="form-input" placeholder="plan_monthly_123" />
+
+          <div className="modal-form-section-card">
+            <div className="modal-form-section-title">Tính năng và trạng thái</div>
+            <div className="modal-form-group">
+              <label className="form-label">Tính năng</label>
+              <div className="payment-plan-feature-input-row">
+                <input
+                  value={featureInput}
+                  onChange={(event) => setFeatureInput(event.target.value)}
+                  placeholder="Thêm một tính năng..."
+                  className="form-input"
+                />
+                <button type="button" className="button-primary" onClick={addFeature}>Thêm</button>
+              </div>
+              {Array.isArray(form.features) && form.features.length > 0 && (
+                <div className="modal-form-list">
+                  {form.features.map((feature, index) => (
+                    <div key={index} className="modal-form-list-item">
+                      <span>{feature}</span>
+                      <button type="button" className="small-icon-button danger" onClick={() => removeFeature(index)}>
+                        <FiX size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-form-group">
+              <label className="payment-plan-popular-toggle">
+                <input
+                  type="checkbox"
+                  checked={!!form.popularPlan}
+                  onChange={(event) => setForm({ ...form, popularPlan: event.target.checked })}
+                />
+                <span>Đánh dấu là gói phổ biến</span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div className="modal-form-grid">
-          <div className="modal-form-group">
-            <label className="form-label">Tier</label>
-            <select value={form.tier || 'premium'} onChange={e => setForm({ ...form, tier: e.target.value })} className="form-input">
-              <option value="free">Miễn phí</option>
-              <option value="premium">Cao cấp</option>
-            </select>
-          </div>
-          <div className="modal-form-group">
-            <label className="form-label">Chu kỳ Thanh toán</label>
-            <select value={form.billingCycle || 'monthly'} onChange={e => setForm({ ...form, billingCycle: e.target.value })} className="form-input">
-              <option value="monthly">Hàng tháng (monthly)</option>
-              <option value="yearly">Hàng năm (yearly)</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="modal-form-grid">
-          <div className="modal-form-group">
-            <label className="form-label">Giá (Price)</label>
-            <input type="number" value={form.price ?? 0} onChange={e => setForm({ ...form, price: Number(e.target.value) })} className="form-input" />
-          </div>
-          <div className="modal-form-group">
-            <label className="form-label">Tiền tệ</label>
-            <input value={form.currency || 'VND'} onChange={e => setForm({ ...form, currency: e.target.value })} className="form-input" placeholder="VND, USD..." />
-          </div>
-        </div>
-        </div>
-
-        <div className="modal-form-section-card">
-        <div className="modal-form-section-title">Tính năng và trạng thái</div>
-        <div className="modal-form-group">
-          <label className="form-label">Tính năng</label>
-          <div className="payment-plan-feature-input-row">
-            <input value={featureInput} onChange={e => setFeatureInput(e.target.value)} placeholder="Thêm một tính năng..." className="form-input" />
-            <button type="button" className="button-primary" onClick={addFeature}>Thêm</button>
-          </div>
-          {Array.isArray(form.features) && form.features.length > 0 && (
-            <div className="modal-form-list">
-              {form.features.map((f, i) => (
-                <div key={i} className="modal-form-list-item">
-                  <span>{f}</span>
-                  <button type="button" className="small-icon-button danger" onClick={() => removeFeature(i)}>
-                    <FiX size={16} />
-                  </button>
+        <aside className="plan-preview-panel">
+          <div className="plan-preview-card">
+            <span className="plan-preview-eyebrow">Live preview</span>
+            <h3>{form.name || 'Tên gói sẽ xuất hiện ở đây'}</h3>
+            <div className="plan-preview-price">
+              {formatCurrency(form.price, form.currency)}
+            </div>
+            <div className="plan-preview-badges">
+              <PlanPill tone={form.tier === 'premium' ? 'primary' : 'neutral'}>
+                {tierLabel(form.tier)}
+              </PlanPill>
+              <PlanPill tone="info">{cycleLabel(form.billingCycle)}</PlanPill>
+              <PopularBadge isPopular={form.popularPlan} />
+            </div>
+            <p className="plan-preview-description">
+              {form.planId || 'plan_id'}
+            </p>
+            <div className="plan-preview-list">
+              {(form.features || []).slice(0, 5).map((feature, index) => (
+                <div key={index} className="plan-preview-feature">
+                  <FiCheck size={14} />
+                  <span>{feature}</span>
                 </div>
               ))}
+              {(form.features || []).length === 0 ? (
+                <p className="plan-muted-text">Thêm tính năng để preview chính xác hơn.</p>
+              ) : null}
             </div>
-          )}
-        </div>
-
-        <div className="modal-form-group">
-          <label className="payment-plan-popular-toggle">
-            <input type="checkbox" checked={!!form.popularPlan} onChange={e => setForm({ ...form, popularPlan: e.target.checked })} />
-            <span>
-              Đánh dấu là Gói Phổ biến
-            </span>
-          </label>
-        </div>
-        </div>
+          </div>
+        </aside>
       </div>
 
       <div className="modal-footer">
@@ -193,77 +317,175 @@ function EditPlanModal({ plan, onClose, onSaved }) {
   )
 }
 
-// --- Main Component ---
+function PlanCard({ plan, onView, onEdit, onDelete }) {
+  const features = Array.isArray(plan.features) ? plan.features : []
+
+  return (
+    <article className={`plan-card ${plan.popularPlan ? 'popular' : ''}`}>
+      <div className="plan-card-top">
+        <div>
+          <div className="plan-card-title-row">
+            <h3>{plan.name}</h3>
+            <PopularBadge isPopular={plan.popularPlan} />
+          </div>
+          <div className="plan-card-meta">
+            <PlanPill tone={plan.tier === 'premium' ? 'primary' : 'neutral'}>{tierLabel(plan.tier)}</PlanPill>
+            <PlanPill tone="info">{cycleLabel(plan.billingCycle)}</PlanPill>
+          </div>
+        </div>
+
+        <div className="plan-card-action-wrap">
+          <TableActionMenu onView={onView} onEdit={onEdit} onDelete={onDelete} />
+        </div>
+      </div>
+
+      <div className="plan-card-price-block">
+        <span className="plan-card-price-label">Giá gói</span>
+        <div className="plan-card-price">{formatCurrency(plan.price, plan.currency)}</div>
+        <span className="plan-card-subtext">ID: {plan.planId}</span>
+      </div>
+
+      <div className="plan-card-features">
+        {(features.length ? features : ['Chưa có tính năng được khai báo'])
+          .slice(0, 4)
+          .map((feature, index) => (
+            <div key={index} className="plan-card-feature-item">
+              <FiCheck size={14} />
+              <span>{feature}</span>
+            </div>
+          ))}
+      </div>
+
+      <div className="plan-card-footer">
+        <button type="button" className="plan-card-footer-btn" onClick={onView}>
+          <FiEye size={14} />
+          Xem
+        </button>
+        <button type="button" className="plan-card-footer-btn" onClick={onEdit}>
+          <FiEdit size={14} />
+          Sửa
+        </button>
+        <button type="button" className="plan-card-footer-btn danger" onClick={onDelete}>
+          <FiTrash2 size={14} />
+          Xóa
+        </button>
+      </div>
+    </article>
+  )
+}
+
 export default function PaymentMethods() {
   const [items, setItems] = useState([])
   const [query, setQuery] = useState('')
   const [detail, setDetail] = useState(null)
   const [editing, setEditing] = useState(null)
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
   const [tierFilter, setTierFilter] = useState('all')
 
   useEffect(() => { load() }, [])
+
   const load = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
       setItems(await api.get('/v1/subscription-plans'))
-    } catch (e) {
-      console.error(e)
+    } catch (error) {
+      if (error?.status === 404) {
+        setItems([])
+      } else {
+        console.error(error)
+      }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Bạn có chắc muốn XÓA gói thanh toán này?')) return;
+    if (!confirm('Bạn có chắc muốn XÓA gói thanh toán này?')) return
     try {
-      await api.del('/v1/subscription-plans/' + id);
-      load();
-    } catch (e) {
-      console.error('Failed to delete plan', e);
+      await api.del('/v1/subscription-plans/' + id)
+      load()
+    } catch (error) {
+      console.error('Failed to delete plan', error)
     }
   }
 
-  const filtered = useMemo(() => items.filter(p => {
-    const matchesQuery = (`${p.name} ${p.tier} ${p.billingCycle}`.toLowerCase())
-      .includes(query.toLowerCase());
-    const matchesTier = tierFilter === 'all' || p.tier === tierFilter;
-    return matchesQuery && matchesTier;
-  }), [items, query, tierFilter]);
+  const stats = useMemo(() => {
+    const premiumCount = items.filter((plan) => plan.tier === 'premium').length
+    const popularCount = items.filter((plan) => plan.popularPlan).length
+    const yearlyCount = items.filter((plan) => plan.billingCycle === 'yearly').length
+    const averagePrice = items.length
+      ? Math.round(items.reduce((sum, plan) => sum + (Number(plan.price) || 0), 0) / items.length)
+      : 0
+
+    return [
+      {
+        label: 'Tổng gói',
+        value: items.length,
+        description: 'Gói thanh toán đang hoạt động trong hệ thống',
+        accent: 'primary',
+      },
+      {
+        label: 'Gói cao cấp',
+        value: premiumCount,
+        description: 'Số gói được gắn tier premium',
+        accent: 'secondary',
+      },
+      {
+        label: 'Gói phổ biến',
+        value: popularCount,
+        description: 'Gói đang được ưu tiên hiển thị',
+        accent: 'warning',
+      },
+      {
+        label: 'Giá trung bình',
+        value: formatCurrency(averagePrice, 'VND'),
+        description: `${yearlyCount} gói theo chu kỳ năm`,
+        accent: 'success',
+      },
+    ]
+  }, [items])
+
+  const filtered = useMemo(() => items.filter((plan) => {
+    const matchesQuery = (`${plan.name} ${plan.tier} ${plan.billingCycle}`.toLowerCase())
+      .includes(query.toLowerCase())
+    const matchesTier = tierFilter === 'all' || plan.tier === tierFilter
+    return matchesQuery && matchesTier
+  }), [items, query, tierFilter])
 
   return (
-    <div className="admin-page">
+    <div className="admin-page payment-plans-page">
       <PageHeader
-        title="Các Gói Thanh toán"
-        subtitle={`Tổng ${items.length} gói`}
+        title="GÓI THANH TOÁN"
+        subtitle="Quản lý, tạo và cập nhật các gói subscription"
+        icon={<FiDollarSign size={22} />}
         actions={(
-          <button className="button-primary" onClick={() => setEditing({})} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <FiPlus size={16} /> Tạo Gói Mới
+          <button className="button-primary payment-plans-cta" onClick={() => setEditing({})}>
+            <FiPlus size={16} />
+            Tạo gói mới
           </button>
-        )} />
+        )}
+      />
 
-      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100"
-        style={{
-          display: 'flex',
-          width: '100%',
-          gap: 12,
-          alignItems: 'center'
-        }}>
-        {/* Search */}
-        <div style={{ position: 'relative', flex: 3, minWidth: 0 }}>
+      <section className="payment-plans-stats-grid">
+        {stats.map((stat) => (
+          <PlanStatCard key={stat.label} {...stat} />
+        ))}
+      </section>
+
+      <div className="search-filter-bar payment-plans-toolbar">
+        <div className="toolbar-search">
           <FormSearchField
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tìm kiếm theo tên, tier, chu kỳ..."
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Tìm theo tên, tier, chu kỳ..."
             icon={FiSearch}
           />
         </div>
 
-        {/* Filter Tier */}
-        <div style={{ position: 'relative', flex: 1, minWidth: 160 }}>
+        <div className="toolbar-filter">
           <FormSelectField
             value={tierFilter}
-            onChange={(e) => setTierFilter(e.target.value)}
+            onChange={(event) => setTierFilter(event.target.value)}
             options={[
               { value: 'all', label: 'Tất cả Tier' },
               { value: 'free', label: 'Miễn phí' },
@@ -273,79 +495,39 @@ export default function PaymentMethods() {
         </div>
       </div>
 
-      {/* SỬA ĐỔI: Thêm class "table-container" để nhận CSS ẩn scrollbar */}
-      <div className="table-container bg-white rounded-lg shadow-md">
+      <section className="payment-plans-section">
+        <div className="payment-plans-section-head">
+          <div>
+            <h2>Danh sách gói thanh toán</h2>
+            <p>{filtered.length} gói phù hợp với bộ lọc hiện tại.</p>
+          </div>
+          <button type="button" className="button-secondary" onClick={() => setEditing({})}>
+            <FiGrid size={16} />
+            Tạo nhanh
+          </button>
+        </div>
+
         {loading ? (
-          <div className="text-center py-10 text-gray-500">Đang tải dữ liệu...</div>
+          <div className="payment-plans-loading">Đang tải dữ liệu...</div>
         ) : filtered.length === 0 ? (
           <EmptyState icon="💳" message="Chưa có gói thanh toán nào được tạo." />
         ) : (
-          /* SỬA ĐỔI: Thêm class "table" và bỏ w-full vì class table đã lo việc đó */
-          <table className="table">
-            <thead>
-              <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                {/* SỬA ĐỔI: Phân chia width % để bảng đầy đặn */}
-                <th style={{ ...tableHeaderStyle, width: '25%' }}>Tên Gói</th>
-                <th style={{ ...tableHeaderStyle, width: '15%' }}>Hạng</th>
-                <th style={{ ...tableHeaderStyle, width: '15%' }}>Chu kỳ</th>
-                <th style={{ ...tableHeaderStyle, width: '15%' }}>Giá</th>
-                <th style={{ ...tableHeaderStyle, width: '15%' }}>Phổ biến</th>
-                <th style={{ ...tableHeaderStyle, width: '15%', textAlign: 'center' }}>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(p => (
-                <tr key={p._id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={tableCellStyle} className="font-medium">{p.name}</td>
-                  <td style={tableCellStyle}>
-                    {/* Badge cho Tier */}
-                    <span style={{
-                      padding: '4px 8px', borderRadius: 6, fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
-                      backgroundColor: p.tier === 'premium' ? '#ede9fe' : '#f3f4f6',
-                      color: p.tier === 'premium' ? '#6d28d9' : '#4b5563'
-                    }}>
-                      {p.tier === 'premium' ? 'Cao cấp' : p.tier === 'free' ? 'Miễn phí' : p.tier}
-                    </span>
-                  </td>
-                  <td style={tableCellStyle}>{p.billingCycle === 'monthly' ? 'Hàng tháng' : p.billingCycle === 'yearly' ? 'Hàng năm' : p.billingCycle}</td>
-                  <td style={{ ...tableCellStyle, fontWeight: 'bold', color: '#059669' }}>
-                    {formatCurrency(p.price, p.currency)}
-                  </td>
-                  <td style={tableCellStyle}>
-                    <PopularBadge isPopular={p.popularPlan} />
-                  </td>
-                  <td style={{ ...tableCellStyle, textAlign: 'center' }}>
-                    <TableActionMenu
-                      onView={() => setDetail(p)}
-                      onEdit={() => setEditing(p)}
-                      onDelete={() => handleDelete(p._id)}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="payment-plans-grid">
+            {filtered.map((plan) => (
+              <PlanCard
+                key={plan._id}
+                plan={plan}
+                onView={() => setDetail(plan)}
+                onEdit={() => setEditing(plan)}
+                onDelete={() => handleDelete(plan._id)}
+              />
+            ))}
+          </div>
         )}
-      </div>
+      </section>
 
       <DetailModal item={detail} onClose={() => setDetail(null)} />
       <EditPlanModal plan={editing} onClose={() => setEditing(null)} onSaved={load} />
     </div>
   )
 }
-
-// Inline Styles (Đã cập nhật)
-const tableHeaderStyle = { padding: '12px 15px', textAlign: 'left', color: '#4b5563', fontWeight: 700, fontSize: 13, textTransform: 'uppercase' };
-const tableCellStyle = { padding: '12px 15px', fontSize: 14, verticalAlign: 'middle' };
-const actionButtonStyle = (color) => ({
-  background: `${color}1A`,
-  color: color,
-  border: 'none',
-  borderRadius: '4px',
-  padding: '8px',
-  cursor: 'pointer',
-  transition: 'background 0.2s',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-});
