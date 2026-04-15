@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import api from '../../api/client'
 import {
-    FiEdit, FiTrash2, FiEye, FiPlus, FiSearch,
+    FiPlus, FiSearch,
     FiCheck, FiX, FiChevronLeft, FiChevronRight,
     FiClock, FiRefreshCw
 } from 'react-icons/fi'
 import { UtensilsCrossed } from 'lucide-react'
-import { Utensils, Zap, Star, Video, Image, ListOrdered } from 'lucide-react';
+import { Utensils, Zap, Star, Video, Image, CalendarDays, UserCircle2, ShieldCheck } from 'lucide-react';
 import RecipeForm from './RecipeForm'
 import PageHeader from '../../components/PageHeader'
 import Modal from '../../components/Modal'
@@ -26,102 +26,90 @@ function DetailModal({ item, onClose }) {
     }
 
     return (
-        <Modal isOpen={!!item} onClose={onClose} title="Chi tiết Công thức" size="large">
-            <div style={{ maxHeight: '75vh', overflowY: 'auto', paddingRight: 8 }}>
-                <div style={{ borderBottom: '1px solid #eee', paddingBottom: 16, marginBottom: 20 }}>
-                    <h2 style={{ fontSize: 24, fontWeight: 700, margin: '0 0 8px 0', color: '#1f2937' }}>{item.name}</h2>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14, color: '#6b7280' }}>
-                        <span>Tác giả: <strong>{item.author?.fullName || item.author?.displayName || 'Unknown'}</strong></span>
-                        <span>Ngày tạo: {new Date(item.createdAt).toLocaleDateString('vi-VN')}</span>
+        <Modal isOpen={!!item} onClose={onClose} title="Chi tiết Công thức" size="large" subtitle={item.category || 'Chưa phân loại'}>
+            <div className="recipe-detail-modal">
+                <section className="recipe-detail-hero">
+                    <div className="recipe-hero-image-wrap">
+                        {item.imageUrl ? (
+                            <img src={item.imageUrl} alt={item.name} className="recipe-hero-image" />
+                        ) : (
+                            <div className="recipe-hero-image-empty"><Image size={20} /> Không có ảnh</div>
+                        )}
                     </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-                    <DetailTag label="Trạng thái" value={item.status} color={getStatusColor(item.status)} />
-                    <DetailTag label="Danh mục" value={item.category} icon={Utensils} />
-                    <DetailTag label="Độ khó" value={item.difficulty} color={getDifficultyColor(item.difficulty)} icon={FiClock} />
+                    <div className="recipe-hero-content">
+                        <h2>{item.name}</h2>
+                        <div className="recipe-hero-meta">
+                            <span><UserCircle2 size={15} /> {item.author?.fullName || item.author?.displayName || 'Ẩn danh'}</span>
+                            <span><CalendarDays size={15} /> {item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                        </div>
+                        <p>{item.description || 'Chưa có mô tả.'}</p>
+                    </div>
+                </section>
+
+                <div className="recipe-detail-tags-grid">
+                    <DetailTag label="Trạng thái" value={item.status === 'approved' ? 'Đã duyệt' : item.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'} color={getStatusColor(item.status)} icon={ShieldCheck} />
+                    <DetailTag label="Danh mục" value={item.category || 'N/A'} icon={Utensils} />
+                    <DetailTag label="Độ khó" value={item.difficulty || 'N/A'} color={getDifficultyColor(item.difficulty)} icon={FiClock} />
                     <DetailTag label="Loại" value={item.isPremium ? 'Cao cấp' : 'Miễn phí'} icon={Zap} color={item.isPremium ? '#f59e0b' : '#374151'} />
                     <DetailTag label="Đánh giá" value={`${item.rating || 0}/5 (${item.reviewCount || 0} lượt)`} icon={Star} color="#f59e0b" />
                 </div>
 
-                <div style={{ marginBottom: 24, background: '#f9fafb', padding: 16, borderRadius: 8, border: '1px solid #e5e7eb' }}>
-                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#6b7280', marginBottom: 8, textTransform: 'uppercase' }}>Mô tả</label>
-                    <p style={{ margin: 0, lineHeight: 1.6, color: '#374151' }}>{item.description || "Chưa có mô tả."}</p>
-                </div>
-
-
-                <div style={{ marginBottom: 24 }}>
-                    <div style={{ marginBottom: 8 }}>
-                        <label className="modal-form-section-title" style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--text-dark)', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Media</label>
+                <div className="recipe-detail-media-grid">
+                    <div className="recipe-media-card">
+                        <div className="recipe-media-head"><Image size={16} /> Hình ảnh</div>
+                        {item.imageUrl ? (
+                            <img src={item.imageUrl} alt={item.name} className="recipe-media-img" />
+                        ) : (
+                            <div className="recipe-media-empty">Không có ảnh</div>
+                        )}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                        <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-                            <div style={{ marginBottom: 8, fontSize: 13, fontWeight: 600, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <Image size={16} /> Hình ảnh
-                            </div>
-                            {item.imageUrl ? (
-                                <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 6 }} />
-                            ) : (
-                                <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f3f4f6', borderRadius: 6, color: '#9ca3af' }}>Không có ảnh</div>
-                            )}
-                        </div>
-                        <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-                            <div style={{ marginBottom: 8, fontSize: 13, fontWeight: 600, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <Video size={16} /> Video hướng dẫn
-                            </div>
-                            {item.videoUrl ? (
-                                <video src={item.videoUrl} controls style={{ width: '100%', height: 200, borderRadius: 6, background: '#000' }} />
-                            ) : (
-                                <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f3f4f6', borderRadius: 6, color: '#9ca3af' }}>Không có video</div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{ marginBottom: 24 }}>
-                    <div style={{ marginBottom: 8 }}>
-                        <label className="modal-form-section-title" style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--text-dark)', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Nguyên liệu</label>
-                    </div>
-                    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, overflow: 'hidden' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '3fr 0.8fr 24px 1.2fr', gap: 1, background: '#e5e7eb', paddingBottom: 1 }}>
-                            <div style={{ background: '#f9fafb', padding: '12px 16px', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', color: '#4b5563', letterSpacing: '0.5px' }}>Tên Nguyên Liệu</div>
-                            <div style={{ background: '#f9fafb', padding: '12px 16px', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', color: '#4b5563', letterSpacing: '0.5px' }}>Số Lượng</div>
-                            <div style={{ background: '#f9fafb' }}></div>
-                            <div style={{ background: '#f9fafb', padding: '12px 16px', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', color: '#4b5563', letterSpacing: '0.5px' }}>Đơn Vị</div>
-                        </div>
-                        {item.ingredients?.map((ing, idx) => (
-                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '3fr 0.8fr 24px 1.2fr', borderBottom: '1px solid #f3f4f6' }}>
-                                <div style={{ padding: '12px 16px', color: '#1f2937' }}>{ing.name}</div>
-                                <div style={{ padding: '12px 16px', color: '#4b5563' }}>{ing.amount || '-'}</div>
-                                <div></div>
-                                <div style={{ padding: '12px 16px', color: '#4b5563' }}>{ing.unit || '-'}</div>
-                            </div>
-                        ))}
-                        {(!item.ingredients || item.ingredients.length === 0) && (
-                            <div style={{ padding: 20, textAlign: 'center', color: '#9ca3af' }}>Không có nguyên liệu</div>
+                    <div className="recipe-media-card">
+                        <div className="recipe-media-head"><Video size={16} /> Video hướng dẫn</div>
+                        {item.videoUrl ? (
+                            <video src={item.videoUrl} controls className="recipe-media-video" />
+                        ) : (
+                            <div className="recipe-media-empty">Không có video</div>
                         )}
                     </div>
                 </div>
 
-                <div style={{ marginBottom: 10 }}>
-                    <div style={{ marginBottom: 8 }}>
-                        <label className="modal-form-section-title" style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--text-dark)', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Các bước thực hiện</label>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        {item.steps?.map((step, idx) => (
-                            <div key={idx} style={{ display: 'flex', gap: 12 }}>
-                                <div style={{ minWidth: 28, height: 28, borderRadius: '50%', background: '#1a73e8', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, marginTop: 2 }}>{idx + 1}</div>
-                                <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: 8, border: '1px solid #e2e8f0', flex: 1, fontSize: 15, lineHeight: 1.5 }}>{step}</div>
+                <div className="recipe-detail-block">
+                    <h3>Nguyên liệu</h3>
+                    <div className="recipe-ingredients-table">
+                        <div className="recipe-ingredients-header">
+                            <span>Tên nguyên liệu</span>
+                            <span>Số lượng</span>
+                            <span>Đơn vị</span>
+                        </div>
+                        {item.ingredients?.length ? item.ingredients.map((ing, idx) => (
+                            <div key={idx} className="recipe-ingredients-row">
+                                <span>{ing.name || '-'}</span>
+                                <span>{ing.amount || '-'}</span>
+                                <span>{ing.unit || '-'}</span>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="recipe-ingredients-empty">Không có nguyên liệu</div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="recipe-detail-block">
+                    <h3>Các bước thực hiện</h3>
+                    <div className="recipe-steps-wrap">
+                        {item.steps?.length ? item.steps.map((step, idx) => (
+                            <div key={idx} className="recipe-step-item">
+                                <div className="recipe-step-index">{idx + 1}</div>
+                                <div className="recipe-step-content">{step}</div>
+                            </div>
+                        )) : (
+                            <div className="recipe-ingredients-empty">Không có bước thực hiện</div>
+                        )}
                     </div>
                 </div>
             </div>
-            <div className="modal-footer" style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #eee' }}>
-                <button className="button-secondary" onClick={onClose}>Đóng</button>
-            </div>
         </Modal>
-    );
+    )
 }
 
 const DetailTag = ({ label, value, icon: Icon, color }) => (
@@ -371,7 +359,7 @@ export default function Recipes() {
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto recipes-table-wrap">
                             <table className="table recipes-table">
                                 <thead style={{ background: '#f9fafb' }}>
                                     <tr>
@@ -381,7 +369,7 @@ export default function Recipes() {
                                         <th style={tableHeaderStyle}>Tác giả</th>
                                         <th style={tableHeaderStyle}>Trạng thái</th>
                                         <th style={tableHeaderStyle}>Loại</th>
-                                        <th style={{ ...tableHeaderStyle, width: 140, textAlign: 'center' }}>Hành động</th>
+                                        <th style={{ ...tableHeaderStyle, textAlign: 'center' }}></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -411,7 +399,7 @@ export default function Recipes() {
                                                 }
                                             </td>
 
-                                            <td style={{ ...tableCellStyle, textAlign: 'center' }}>
+                                            <td className="actions-cell recipe-actions-cell" style={{ ...tableCellStyle, textAlign: 'center' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                     <TableActionMenu
                                                         onView={() => setDetail(r)}
