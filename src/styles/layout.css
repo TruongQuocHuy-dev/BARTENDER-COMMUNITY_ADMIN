@@ -679,6 +679,18 @@ body,
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    z-index: 1101;
+  }
+
+  .mobile-menu-btn.menu-open {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1102;
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: var(--shadow-primary);
   }
   
   .mobile-close-btn {

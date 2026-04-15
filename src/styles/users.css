@@ -35,6 +35,114 @@
     background-color: #f9fafb;
 }
 
+.users-table-wrap {
+    overflow-x: auto !important;
+    overflow-y: visible;
+}
+
+.users-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.users-table th,
+.users-table td {
+    white-space: nowrap;
+}
+
+.users-table th:nth-child(1),
+.users-table td:nth-child(1) {
+    width: 16%;
+}
+
+.users-table th:nth-child(2),
+.users-table td:nth-child(2) {
+    width: 24%;
+}
+
+.users-table th:nth-child(3),
+.users-table td:nth-child(3) {
+    width: 14%;
+}
+
+.users-table th:nth-child(4),
+.users-table td:nth-child(4) {
+    width: 13%;
+}
+
+.users-table th:nth-child(5),
+.users-table td:nth-child(5) {
+    width: 11%;
+}
+
+.users-table th:nth-child(6),
+.users-table td:nth-child(6) {
+    width: 12%;
+}
+
+.users-table th:nth-child(7),
+.users-table td:nth-child(7) {
+    width: 96px;
+}
+
+.user-name-cell,
+.user-email-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-name-cell .cell-truncate,
+.user-email-cell .cell-truncate {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.users-table .actions-column,
+.users-table .actions-cell {
+    text-align: center;
+}
+
+.users-table .actions-column,
+.users-table .actions-cell {
+    position: sticky;
+    right: 0;
+        width: 72px;
+    background: #ffffff;
+}
+
+.users-table thead .actions-column {
+    z-index: 4;
+    box-shadow: -8px 0 14px -12px rgba(15, 23, 42, 0.35);
+}
+
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+}
+
+@media (max-width: 1200px) {
+    .users-table {
+        background: #f8fafc;
+    }
+
+    .users-table th:nth-child(2),
+    .users-table td:nth-child(2) {
+        width: 22%;
+    }
+}
+
+    .actions-header-cell {
+        letter-spacing: 0;
+    }
+
+    .actions-header-dot {
+        font-size: 14px;
+        color: #64748b;
+        line-height: 1;
+    }
 /* Action Button Hover */
 .actions-cell .action-btn:hover {
     background-color: rgba(0, 0, 0, 0.1);

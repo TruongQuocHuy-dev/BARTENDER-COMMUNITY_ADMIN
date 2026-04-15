@@ -21,7 +21,6 @@ import Login from "./auth/Login"
 import Header from "../components/Header"
 import Sidebar from "../components/SideBar"
 import { ProtectedRoute, PublicRoute } from "../components/ProtectedRoute"
-import { Menu } from "lucide-react" // Import icon Menu náº¿u cáº§n dĂ¹ng trá»±c tiáº¿p trong layout (option)
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth()
@@ -42,6 +41,7 @@ const Layout = ({ children }) => {
         {/* 3. TRUYỀN HÀM TOGGLE VÀO HEADER */}
         <Header
           user={user}
+          isMobileMenuOpen={isMobileMenuOpen}
           onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           onLogout={() => {
             logout()

@@ -72,6 +72,11 @@ const StatusBadge = ({ user }) => {
   return <BadgePill label={label} tone={tone} />
 };
 
+const truncateText = (value, maxChars = 12) => {
+  const text = String(value || '')
+  return text.length > maxChars ? `${text.slice(0, maxChars)}...` : text
+}
+
 // --- Modal chọn Bộ lọc mới (Không đổi) ---
 function FilterSelectModal({ isOpen, onClose, onApplyFilter }) {
   const [selectedType, setSelectedType] = useState(null);
@@ -273,6 +278,11 @@ function DetailUserModal({ user, onClose }) {
   const statusLabel = isBanned ? 'Đã khóa' : 'Không bị khóa'
   const statusTone = isBanned ? 'danger' : 'success'
   const planLabel = subscription.tier === 'premium' ? 'Cao cấp' : 'Miễn phí'
+  const followersCount = Number(user.followersCount) || 0
+  const followingCount = Number(user.followingCount) || 0
+  const socialMax = Math.max(followersCount, followingCount, 1)
+  const followersPercent = Math.round((followersCount / socialMax) * 100)
+  const followingPercent = Math.round((followingCount / socialMax) * 100)
 
   return (
     <Modal
@@ -285,7 +295,11 @@ function DetailUserModal({ user, onClose }) {
       <div className="modal-form user-detail-modal">
         <section className="user-detail-hero">
           <div className="user-detail-avatar">
-            {initials}
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.fullName || 'Avatar'} className="user-detail-avatar-image" />
+            ) : (
+              initials
+            )}
           </div>
 
           <div className="user-detail-hero-body">
@@ -346,7 +360,10 @@ function DetailUserModal({ user, onClose }) {
         </div>
 
         <div className="modal-form-section-card user-detail-section-card">
-          <div className="modal-form-section-title">Chi tiết quản trị</div>
+          <div className="modal-form-section-title">
+            <Clock3 size={16} />
+            Chi tiết quản trị
+          </div>
           <div className="user-detail-info-list">
             <div className="user-detail-info-item">
               <span className="info-label">Gói DV hiện tại</span>
@@ -358,11 +375,35 @@ function DetailUserModal({ user, onClose }) {
             </div>
             <div className="user-detail-info-item">
               <span className="info-label">Số followers</span>
-              <span className="info-value">{user.followersCount ?? 0}</span>
+              <span className="info-value">{followersCount}</span>
             </div>
             <div className="user-detail-info-item">
               <span className="info-label">Số following</span>
-              <span className="info-value">{user.followingCount ?? 0}</span>
+              <span className="info-value">{followingCount}</span>
+            </div>
+          </div>
+
+          <div className="user-mini-chart">
+            <div className="user-mini-chart-row">
+              <div className="user-mini-chart-label">
+                <UsersIcon size={15} />
+                Followers
+              </div>
+              <span className="user-mini-chart-value">{followersCount}</span>
+              <div className="user-mini-chart-track">
+                <div className="user-mini-chart-fill followers" style={{ width: `${followersPercent}%` }}></div>
+              </div>
+            </div>
+
+            <div className="user-mini-chart-row">
+              <div className="user-mini-chart-label">
+                <UserCircle2 size={15} />
+                Following
+              </div>
+              <span className="user-mini-chart-value">{followingCount}</span>
+              <div className="user-mini-chart-track">
+                <div className="user-mini-chart-fill following" style={{ width: `${followingPercent}%` }}></div>
+              </div>
             </div>
           </div>
         </div>
@@ -502,7 +543,7 @@ export default function Users() {
       </div>
 
       {/* --- Users Table --- */}
-      <div className="table-section bg-white p-4 rounded-lg shadow-md overflow-x-auto">
+      <div className="table-section users-table-wrap bg-white p-4 rounded-lg shadow-md overflow-x-auto">
         {filtered.length === 0 ? (
           <EmptyState icon="🕵️" message="Không tìm thấy người dùng nào khớp với tiêu chí tìm kiếm và bộ lọc." />
         ) : (
@@ -515,14 +556,18 @@ export default function Users() {
                 <th style={tableHeaderStyle}>Vai trò</th>
                 <th style={tableHeaderStyle}>Trạng thái</th>
                 <th style={tableHeaderStyle}>Xác thực</th>
-                <th className="actions-column" style={{ ...tableHeaderStyle, textAlign: 'center' }}>Hành động</th>
+                <th style={tableHeaderStyle}></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((u) => (
                 <tr key={u._id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={tableCellStyle} className="font-medium">{u.fullName || 'N/A'}</td>
-                  <td style={tableCellStyle} className="text-gray-600">{u.email}</td>
+                  <td style={tableCellStyle} className="font-medium user-name-cell" title={u.fullName || 'N/A'}>
+                    <span className="cell-truncate">{truncateText(u.fullName || 'N/A', 16)}</span>
+                  </td>
+                  <td style={tableCellStyle} className="text-gray-600 user-email-cell" title={u.email || 'N/A'}>
+                    <span className="cell-truncate">{truncateText(u.email || 'N/A', 24)}</span>
+                  </td>
                   <td style={tableCellStyle}>
                     <span className={`subscription-tag subscription-${u.subscription?.tier || 'free'}`}>
                       {u.subscription?.tier === 'premium'
@@ -573,7 +618,7 @@ export default function Users() {
 
 // Inline Styles for Table
 const tableHeaderStyle = {
-  padding: '16px 24px', // Tăng padding lên cho thoáng
+  padding: '14px 16px',
   textAlign: 'left',
   color: '#6b7280',
   fontWeight: 600,
@@ -582,6 +627,7 @@ const tableHeaderStyle = {
   letterSpacing: '0.05em' // Giãn chữ nhẹ cho sang
 };
 const tableCellStyle = {
+  padding: '14px 16px',
   borderBottom: '1px solid #f3f4f6',
   verticalAlign: 'middle' // Căn giữa theo chiều dọc
 };

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
-  LogOut, User, ChevronDown, Menu, Bell, Settings
+  LogOut, User, ChevronDown, Menu, Bell, Settings, X
 } from "lucide-react"
 import NotificationDropdown from "./common/NotificationDropdown"
 
@@ -32,7 +32,7 @@ const notificationPreview = [
   },
 ]
 
-export default function Header({ user, onLogout, onToggleMobileMenu }) {
+export default function Header({ user, onLogout, onToggleMobileMenu, isMobileMenuOpen = false }) {
   const navigate = useNavigate()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotificationMenu, setShowNotificationMenu] = useState(false)
@@ -86,10 +86,11 @@ export default function Header({ user, onLogout, onToggleMobileMenu }) {
     <header className="electro-header">
       <div className="header-left">
         <button
-          className="action-btn mobile-menu-btn"
+          className={`action-btn mobile-menu-btn ${isMobileMenuOpen ? "menu-open" : ""}`}
           onClick={onToggleMobileMenu}
+          aria-label={isMobileMenuOpen ? "Dong menu" : "Mo menu"}
         >
-          <Menu size={22} />
+          {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 

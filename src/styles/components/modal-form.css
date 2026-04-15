@@ -415,6 +415,14 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   box-shadow: 0 12px 24px rgba(102, 126, 234, 0.28);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.user-detail-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .user-detail-hero-body {
@@ -520,6 +528,64 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.user-mini-chart {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.10);
+  background: rgba(248, 250, 252, 0.7);
+}
+
+.user-mini-chart-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.user-mini-chart-row + .user-mini-chart-row {
+  margin-top: 10px;
+}
+
+.user-mini-chart-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 95px;
+}
+
+.user-mini-chart-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 28px;
+}
+
+.user-mini-chart-track {
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: rgba(148, 163, 184, 0.22);
+  overflow: hidden;
+}
+
+.user-mini-chart-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  min-width: 4px;
+  transition: width 0.35s ease;
+}
+
+.user-mini-chart-fill.followers {
+  background: linear-gradient(90deg, #3b82f6, #6366f1);
+}
+
+.user-mini-chart-fill.following {
+  background: linear-gradient(90deg, #f59e0b, #f97316);
 }
 
 .user-detail-info-item {
