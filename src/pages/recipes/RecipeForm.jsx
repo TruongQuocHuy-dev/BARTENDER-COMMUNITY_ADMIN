@@ -328,14 +328,14 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
           <div className="recipe-list-actions">
             <button type="button" onClick={addIngredient} className="button-secondary small-button">+ Thêm nguyên liệu</button>
           </div>
-          <div className="recipe-ingredients-header">
+          <div className="recipe-form-ingredients-header">
             <span>Tên Nguyên Liệu*</span>
             <span>Số Lượng</span>
             <span>Đơn Vị</span>
             <span></span>
           </div>
           {form.ingredients.map((ing, index) => (
-            <div key={index} className="recipe-ingredients-row">
+            <div key={index} className="recipe-form-ingredients-row">
               <input
                 value={ing.name}
                 onChange={e => updateIngredient(index, 'name', e.target.value)}
@@ -390,7 +390,7 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
                 onChange={e => updateStep(index, e.target.value)}
                 placeholder={`Mô tả bước ${index + 1}`}
                 className="form-input"
-                rows={2}
+                rows={1}
               />
               <button
                 type="button"
