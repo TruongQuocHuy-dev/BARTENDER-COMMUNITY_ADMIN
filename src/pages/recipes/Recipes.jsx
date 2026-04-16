@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import api from '../../api/client'
 import {
     FiPlus, FiSearch,
     FiCheck, FiX, FiChevronLeft, FiChevronRight,
-    FiClock, FiRefreshCw
+    FiClock, FiRefreshCw, FiUpload
 } from 'react-icons/fi'
 import { UtensilsCrossed } from 'lucide-react'
 import { Utensils, Zap, Star, Video, Image, CalendarDays, UserCircle2, ShieldCheck } from 'lucide-react';
@@ -137,7 +137,9 @@ export default function Recipes() {
     const [typeFilter, setTypeFilter] = useState('all') // 'all', 'free', 'premium'
 
     const [isBulkApproving, setIsBulkApproving] = useState(false)
+    const [isImporting, setIsImporting] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
+    const fileInputRef = useRef(null)
     const ITEMS_PER_PAGE = 10;
 
     // Load data
@@ -237,17 +239,213 @@ export default function Recipes() {
         setCurrentPage(1);
     }
 
+    const parseCsvLine = (line) => {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i += 1) {
+            const ch = line[i];
+            const next = line[i + 1];
+
+            if (ch === '"') {
+                if (inQuotes && next === '"') {
+                    current += '"';
+                    i += 1;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (ch === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = '';
+            } else {
+                current += ch;
+            }
+        }
+
+        values.push(current.trim());
+        return values;
+    };
+
+    const parseCsvText = (text) => {
+        const lines = text
+            .replace(/^\uFEFF/, '')
+            .split(/\r?\n/)
+            .map(l => l.trim())
+            .filter(Boolean);
+
+        if (lines.length < 2) return [];
+
+        const headers = parseCsvLine(lines[0]);
+
+        return lines.slice(1).map((line) => {
+            const values = parseCsvLine(line);
+            return headers.reduce((acc, header, idx) => {
+                acc[header] = values[idx] ?? '';
+                return acc;
+            }, {});
+        });
+    };
+
+    const normalizeImportKey = (key) => String(key || '')
+        .replace(/^\uFEFF/, '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+
+    const getFieldByAliases = (row, aliases) => {
+        if (!row || typeof row !== 'object') return '';
+        const normalizedRow = {};
+        Object.entries(row).forEach(([k, v]) => {
+            normalizedRow[normalizeImportKey(k)] = v;
+        });
+
+        for (const alias of aliases) {
+            const value = normalizedRow[normalizeImportKey(alias)];
+            if (value !== undefined && value !== null && String(value).trim() !== '') {
+                return value;
+            }
+        }
+
+        return '';
+    };
+
+    const parseIngredientsField = (value) => {
+        if (Array.isArray(value)) return value;
+        if (!value || typeof value !== 'string') return [];
+
+        const raw = value.trim();
+        if (!raw) return [];
+
+        if (raw.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed;
+            } catch {
+                // fallback parser below
+            }
+        }
+
+        return raw.split(';').map((item) => {
+            const [name = '', amount = '', unit = ''] = item.split('|');
+            return {
+                name: name.trim(),
+                amount: amount.trim(),
+                unit: unit.trim(),
+            };
+        }).filter(i => i.name);
+    };
+
+    const parseStepsField = (value) => {
+        if (Array.isArray(value)) return value;
+        if (!value || typeof value !== 'string') return [];
+
+        const raw = value.trim();
+        if (!raw) return [];
+
+        if (raw.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed;
+            } catch {
+                // fallback parser below
+            }
+        }
+
+        return raw.split(';').map(s => s.trim()).filter(Boolean);
+    };
+
+    const normalizeImportedRecipe = (row) => ({
+        name: String(getFieldByAliases(row, ['name', 'ten_cong_thuc', 'ten', 'recipe_name'])).trim(),
+        description: String(getFieldByAliases(row, ['description', 'mo_ta', 'mo_ta_ngan', 'desc'])).trim(),
+        category: String(getFieldByAliases(row, ['category', 'danh_muc', 'loai'])).trim(),
+        difficulty: String(getFieldByAliases(row, ['difficulty', 'do_kho', 'level']) || 'medium').trim().toLowerCase(),
+        alcoholLevel: String(getFieldByAliases(row, ['alcoholLevel', 'alcohol_level', 'nong_do', 'nong_do_con']) || 'medium').trim().toLowerCase(),
+        isPremium: getFieldByAliases(row, ['isPremium', 'premium', 'cao_cap']),
+        imageUrl: String(getFieldByAliases(row, ['imageUrl', 'image_url', 'hinh_anh', 'anh'])).trim(),
+        videoUrl: String(getFieldByAliases(row, ['videoUrl', 'video_url', 'video'])).trim(),
+        author: getFieldByAliases(row, ['author', 'authorId', 'tac_gia', 'nguoi_tao']),
+        ingredients: parseIngredientsField(getFieldByAliases(row, ['ingredients', 'nguyen_lieu', 'nguyen_lie', 'ingredient'])),
+        steps: parseStepsField(getFieldByAliases(row, ['steps', 'cac_buoc', 'buoc_lam', 'huong_dan'])),
+    });
+
+    const handleImportFile = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const text = await file.text();
+            const ext = file.name.toLowerCase().split('.').pop();
+
+            let parsedRows = [];
+            if (ext === 'json') {
+                const parsed = JSON.parse(text);
+                parsedRows = Array.isArray(parsed) ? parsed : [];
+            } else if (ext === 'csv') {
+                parsedRows = parseCsvText(text);
+            } else {
+                alert('Chỉ hỗ trợ file .json hoặc .csv');
+                return;
+            }
+
+            const recipes = parsedRows
+                .map(normalizeImportedRecipe)
+                .filter(r => r.name && r.category);
+
+            if (!recipes.length) {
+                alert('Không tìm thấy dữ liệu công thức hợp lệ trong file.');
+                return;
+            }
+
+            if (!confirm(`Import ${recipes.length} công thức từ file này?`)) {
+                return;
+            }
+
+            setIsImporting(true);
+            const result = await api.post('/admin/recipes/import', { recipes });
+            alert(`${result.message}. Thành công: ${result.insertedCount}, lỗi: ${result.failedCount}`);
+            await load();
+        } catch (e) {
+            console.error('Import recipes error:', e);
+            alert(e?.message || 'Import thất bại. Vui lòng kiểm tra định dạng file.');
+        } finally {
+            setIsImporting(false);
+            if (event.target) event.target.value = '';
+        }
+    };
+
     return (
         <div className="admin-page">
             <PageHeader
                 title="QUẢN LÝ CÔNG THỨC"
                 subtitle={`Hiển thị ${paginatedItems.length} / ${filtered.length} công thức`}
                 actions={(
-                    <button onClick={() => setEditing(true)} className="button-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <FiPlus size={16} /> Thêm Mới
-                    </button>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="button-secondary"
+                            disabled={isImporting}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                            title="Import nhanh từ file JSON/CSV"
+                        >
+                            <FiUpload size={16} /> {isImporting ? 'Đang import...' : 'Import File'}
+                        </button>
+                        <button onClick={() => setEditing(true)} className="button-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <FiPlus size={16} /> Thêm Mới
+                        </button>
+                    </div>
                 )}
                 icon={<UtensilsCrossed size={26} />}
+            />
+
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,.csv,application/json,text/csv"
+                style={{ display: 'none' }}
+                onChange={handleImportFile}
             />
 
             {/* --- THANH TÌM KIẾM & BỘ LỌC --- */}

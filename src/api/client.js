@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const envApiBase = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_BASE_URL : '';
+const windowApiBase = typeof window !== 'undefined' ? window.__API_BASE__ : '';
+const API_BASE = String(envApiBase || windowApiBase || 'http://localhost:8080/api').trim();
 
 const getToken = () => localStorage.getItem('admin_token')
 
