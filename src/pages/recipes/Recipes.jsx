@@ -3,7 +3,7 @@ import api from '../../api/client'
 import {
     FiPlus, FiSearch,
     FiCheck, FiX, FiChevronLeft, FiChevronRight,
-    FiClock, FiRefreshCw, FiUpload
+    FiClock, FiRefreshCw, FiUpload, FiTrash2
 } from 'react-icons/fi'
 import { UtensilsCrossed } from 'lucide-react'
 import { Utensils, Zap, Star, Video, Image, CalendarDays, UserCircle2, ShieldCheck } from 'lucide-react';
@@ -137,6 +137,8 @@ export default function Recipes() {
     const [typeFilter, setTypeFilter] = useState('all') // 'all', 'free', 'premium'
 
     const [isBulkApproving, setIsBulkApproving] = useState(false)
+    const [selectedIds, setSelectedIds] = useState([])
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false)
     const [isImporting, setIsImporting] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
     const fileInputRef = useRef(null)
@@ -229,6 +231,75 @@ export default function Recipes() {
     };
 
     const pendingCount = items.filter(r => r.status === 'pending' || !r.status).length;
+
+    const currentPageIds = useMemo(() => paginatedItems.map(r => r._id), [paginatedItems]);
+
+    const allCurrentPageSelected = useMemo(() => {
+        if (currentPageIds.length === 0) return false;
+        return currentPageIds.every(id => selectedIds.includes(id));
+    }, [currentPageIds, selectedIds]);
+
+    const selectedCount = selectedIds.length;
+
+    useEffect(() => {
+        const validIds = new Set(filtered.map(r => r._id));
+        setSelectedIds(prev => prev.filter(id => validIds.has(id)));
+    }, [filtered]);
+
+    const toggleSelectRecipe = (id) => {
+        setSelectedIds(prev => (
+            prev.includes(id)
+                ? prev.filter(itemId => itemId !== id)
+                : [...prev, id]
+        ));
+    };
+
+    const toggleSelectAllCurrentPage = (checked) => {
+        if (!checked) {
+            setSelectedIds(prev => prev.filter(id => !currentPageIds.includes(id)));
+            return;
+        }
+
+        setSelectedIds(prev => {
+            const merged = new Set([...prev, ...currentPageIds]);
+            return Array.from(merged);
+        });
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) {
+            alert('Vui lòng chọn ít nhất 1 công thức để xóa.');
+            return;
+        }
+
+        if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} công thức đã chọn?`)) {
+            return;
+        }
+
+        setIsBulkDeleting(true);
+        try {
+            const results = await Promise.allSettled(
+                selectedIds.map(id => api.del('/recipes/' + id))
+            );
+
+            const successCount = results.filter(r => r.status === 'fulfilled').length;
+            const failedCount = results.length - successCount;
+
+            if (failedCount > 0) {
+                alert(`Đã xóa ${successCount}/${results.length} công thức. Có ${failedCount} công thức xóa thất bại.`);
+            } else {
+                alert(`Đã xóa thành công ${successCount} công thức.`);
+            }
+
+            setSelectedIds([]);
+            await load();
+        } catch (e) {
+            console.error(e);
+            alert(e?.message || 'Xóa hàng loạt thất bại.');
+        } finally {
+            setIsBulkDeleting(false);
+        }
+    };
 
     // Reset filters
     const clearFilters = () => {
@@ -518,6 +589,14 @@ export default function Recipes() {
                 actions={(
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         <button
+                            onClick={handleBulkDelete}
+                            className="button-danger"
+                            disabled={isBulkDeleting || selectedCount === 0}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                        >
+                            <FiTrash2 size={16} /> {isBulkDeleting ? 'Đang xóa...' : `Xóa đã chọn (${selectedCount})`}
+                        </button>
+                        <button
                             onClick={() => fileInputRef.current?.click()}
                             className="button-secondary"
                             disabled={isImporting}
@@ -655,18 +734,37 @@ export default function Recipes() {
                             <table className="table recipes-table">
                                 <thead style={{ background: '#f9fafb' }}>
                                     <tr>
+                                        <th style={{ ...tableHeaderStyle, width: 46, textAlign: 'center' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={allCurrentPageSelected}
+                                                onChange={(e) => toggleSelectAllCurrentPage(e.target.checked)}
+                                                title="Chọn tất cả công thức trong trang"
+                                                aria-label="Chọn tất cả công thức trong trang"
+                                            />
+                                        </th>
                                         <th style={tableHeaderStyle}>Hình ảnh</th>
                                         <th style={tableHeaderStyle}>Tên công thức</th>
                                         <th style={tableHeaderStyle}>Danh mục</th>
                                         <th style={tableHeaderStyle}>Tác giả</th>
                                         <th style={tableHeaderStyle}>Trạng thái</th>
                                         <th style={tableHeaderStyle}>Loại</th>
-                                        <th style={{ ...tableHeaderStyle, textAlign: 'center' }}></th>
+                                        <th style={tableHeaderStyle}></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {paginatedItems.map(r => (
                                         <tr key={r._id} style={{ borderBottom: '1px solid #f3f4f6' }} className="hover:bg-gray-50">
+                                            <td style={{ ...tableCellStyle, textAlign: 'center' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.includes(r._id)}
+                                                    onChange={() => toggleSelectRecipe(r._id)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    title={`Chọn công thức ${r.name}`}
+                                                    aria-label={`Chọn công thức ${r.name}`}
+                                                />
+                                            </td>
                                             <td style={tableCellStyle}>
                                                 {r.imageUrl ? (
                                                     <img src={r.imageUrl} alt={r.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, border: '1px solid #eee' }} />
