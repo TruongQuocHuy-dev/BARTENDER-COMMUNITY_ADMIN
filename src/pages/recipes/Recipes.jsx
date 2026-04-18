@@ -426,10 +426,30 @@ export default function Recipes() {
             const delimiter = pickDelimiter();
             const [name = '', amount = '', unit = ''] = chunk.split(delimiter);
 
+            const normalize = (value) => String(value || '').trim();
+            const amountOnlyMatch = chunk.match(/^((?:\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?|\d+\/\d+|few|a few|some|ít|vài|nhiều|đủ(?: đầy)?|một|hai|ba|bốn|năm|sáu|bảy|tám|chín|mười))\s+(.+)$/iu);
+            const amountUnitMatch = chunk.match(/^((?:\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?|\d+\/\d+|few|a few|some|ít|vài|nhiều|đủ(?: đầy)?|một|hai|ba|bốn|năm|sáu|bảy|tám|chín|mười))\s*(ml|l|cl|oz|gr|g|kg|mg|mcg|giọt|dash(?:es)?|muỗng nhỏ|muỗng canh|thìa cà phê|thìa canh|cốc|ly|chai|trái|quả|lá|miếng|lát|nhánh|củ|viên|phần|túi|piece|pieces|drop|drops|pinch)\.?\s+(.+)$/iu);
+
+            if (amountUnitMatch) {
+                return {
+                    name: normalize(amountUnitMatch[3]),
+                    amount: normalize(amountUnitMatch[1]),
+                    unit: normalize(amountUnitMatch[2]),
+                };
+            }
+
+            if (amountOnlyMatch) {
+                return {
+                    name: normalize(amountOnlyMatch[2]),
+                    amount: normalize(amountOnlyMatch[1]),
+                    unit: '',
+                };
+            }
+
             return {
-                name: name.trim(),
-                amount: amount.trim(),
-                unit: unit.trim(),
+                name: normalize(name),
+                amount: normalize(amount),
+                unit: normalize(unit),
             };
         };
 
@@ -500,18 +520,25 @@ export default function Recipes() {
             const key = resolveRecipeKey(row);
             if (!key || !recipeMap.has(key)) return;
 
-            const combined = getFieldByAliases(row, ['ingredients', 'ingredient', 'nguyen_lieu']);
-            const parsedCombined = parseIngredientsField(combined);
+            const name = String(getFieldByAliases(row, ['ingredient', 'name', 'ingredient_name', 'ten_nguyen_lieu', 'nguyen_lieu']) || '').trim();
+            const amount = String(getFieldByAliases(row, ['quantity', 'amount', 'so_luong', 'soluong', 's_l', 'sl', 'dinh_luong']) || '').trim();
+            const unit = String(getFieldByAliases(row, ['unit', 'don_vi', 'donvi', 'dvt']) || '').trim();
+            const direction = String(getFieldByAliases(row, ['ingredient_direction', 'ingredientDirection', 'huong_dan_nguyen_lieu']) || '').trim();
+            const combined = getFieldByAliases(row, ['ingredients', 'ingredient', 'nguyen_lieu']) || direction;
 
-            if (parsedCombined.length) {
-                recipeMap.get(key).ingredients.push(...parsedCombined);
+            if (name || amount || unit) {
+                recipeMap.get(key).ingredients.push({
+                    name: name || parseIngredientsField(combined)?.[0]?.name || '',
+                    amount: amount || parseIngredientsField(combined)?.[0]?.amount || '',
+                    unit: unit || parseIngredientsField(combined)?.[0]?.unit || '',
+                });
                 return;
             }
 
-            const name = String(getFieldByAliases(row, ['name', 'ingredient_name', 'ten_nguyen_lieu', 'nguyen_lieu']) || '').trim();
-            const amount = String(getFieldByAliases(row, ['amount', 'so_luong', 'quantity']) || '').trim();
-            const unit = String(getFieldByAliases(row, ['unit', 'don_vi']) || '').trim();
-            if (name) recipeMap.get(key).ingredients.push({ name, amount, unit });
+            const parsedCombined = parseIngredientsField(combined);
+            if (parsedCombined.length) {
+                recipeMap.get(key).ingredients.push(...parsedCombined);
+            }
         });
 
         stepRows.forEach((row) => {
