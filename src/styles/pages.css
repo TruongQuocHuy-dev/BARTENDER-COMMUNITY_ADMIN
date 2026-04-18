@@ -1196,6 +1196,13 @@
   align-items: start;
 }
 
+.payment-plans-header-actions {
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .plan-editor-form {
   display: grid;
   gap: 14px;
@@ -1231,6 +1238,12 @@
   background-color: var(--bg-white);
   box-sizing: border-box;
   transition: all var(--transition-base) var(--ease-smooth);
+}
+
+.payment-plan-form .form-input[readonly] {
+  background: #f8fafc;
+  color: var(--text-secondary);
+  cursor: default;
 }
 
 .payment-plan-form .form-input:focus {
@@ -1338,6 +1351,81 @@
   width: 100%;
 }
 
+.bulk-plan-error {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-weight: 600;
+}
+
+.bulk-plan-add-button {
+  width: 100%;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.bulk-create-plan-preview {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.bulk-create-plan-shell .plan-preview-card {
+  position: static;
+  min-height: auto;
+}
+
+.bulk-create-plan-shell {
+  padding-bottom: 84px;
+}
+
+.bulk-plan-queued-list {
+  margin-top: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: #f8fafc;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.bulk-plan-queued-head {
+  position: sticky;
+  top: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  background: #f1f5f9;
+}
+
+.bulk-plan-queued-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.bulk-plan-queued-item:last-child {
+  border-bottom: none;
+}
+
+.bulk-plan-queued-item strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text-dark);
+}
+
+.bulk-plan-queued-item p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 .payment-plan-form .modal-form-grid,
 .payment-plan-form .payment-form-main-grid {
   align-items: start;
@@ -1393,6 +1481,16 @@
     justify-items: start;
   }
 
+  .payment-plans-header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .payment-plans-header-actions .payment-plans-cta {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
   .payment-plans-stats-grid {
     grid-template-columns: 1fr;
   }
@@ -1407,6 +1505,10 @@
 
   .payment-plan-feature-input-row {
     grid-template-columns: 1fr;
+  }
+
+  .bulk-plan-queued-list {
+    max-height: 180px;
   }
 
   .plan-card-footer {

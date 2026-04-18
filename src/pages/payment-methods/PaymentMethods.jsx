@@ -38,10 +38,38 @@ const tierLabel = (tier) => {
 }
 
 const cycleLabel = (cycle) => {
+  if (cycle === 'free') return 'Miễn phí'
   if (cycle === 'monthly') return 'Hàng tháng'
   if (cycle === 'yearly') return 'Hàng năm'
   return cycle || 'Khác'
 }
+
+const normalizePlanIdBase = (value = '') => {
+  return String(value)
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+const buildPlanIdPreview = (name = '') => {
+  const base = normalizePlanIdBase(name) || 'plan'
+  return `${base}-1`
+}
+
+const createEmptyPlanForm = (overrides = {}) => ({
+  name: '',
+  tier: 'premium',
+  billingCycle: 'monthly',
+  currency: 'VND',
+  planId: '',
+  price: 0,
+  features: [],
+  popularPlan: false,
+  ...overrides,
+})
 
 const PopularBadge = ({ isPopular }) => {
   if (!isPopular) return <PlanPill tone="neutral">Tiêu chuẩn</PlanPill>
@@ -102,6 +130,285 @@ function DetailModal({ item, onClose }) {
   )
 }
 
+function BulkCreatePlanModal({ isOpen, onClose, onSaved }) {
+  const [form, setForm] = useState(createEmptyPlanForm())
+  const [featureInput, setFeatureInput] = useState('')
+  const [queuedPlans, setQueuedPlans] = useState([])
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!isOpen) return
+    setForm(createEmptyPlanForm())
+    setFeatureInput('')
+    setQueuedPlans([])
+    setSaving(false)
+    setError('')
+  }, [isOpen])
+
+  if (!isOpen) return null
+
+  const planIdPreview = buildPlanIdPreview(form.name)
+  const nextSubmitCount = queuedPlans.length + (form.name.trim() ? 1 : 0)
+
+  const addFeature = () => {
+    const nextValue = featureInput.trim()
+    if (!nextValue) return
+    setForm((prev) => ({ ...prev, features: [...(prev.features || []), nextValue] }))
+    setFeatureInput('')
+  }
+
+  const removeFeature = (index) => {
+    setForm((prev) => ({ ...prev, features: prev.features.filter((_, featureIndex) => featureIndex !== index) }))
+  }
+
+  const normalizePlanPayload = (source) => {
+    return {
+      ...source,
+      name: String(source.name || '').trim(),
+      currency: String(source.currency || 'VND').trim() || 'VND',
+      price: Number(source.price || 0),
+      features: Array.isArray(source.features) ? source.features.map((item) => String(item).trim()).filter(Boolean) : [],
+      popularPlan: Boolean(source.popularPlan),
+      planId: buildPlanIdPreview(source.name),
+    }
+  }
+
+  const validatePlan = (source) => {
+    return source.name && source.tier && source.billingCycle && source.price !== undefined && !Number.isNaN(source.price)
+  }
+
+  const addCurrentPlan = () => {
+    const payload = normalizePlanPayload(form)
+    if (!validatePlan(payload)) {
+      setError('Vui lòng nhập đủ thông tin gói trước khi thêm.')
+      return
+    }
+
+    setQueuedPlans((prev) => [...prev, payload])
+    setForm(createEmptyPlanForm())
+    setFeatureInput('')
+    setError('')
+  }
+
+  const removeQueuedPlan = (index) => {
+    setQueuedPlans((prev) => prev.filter((_, queuedIndex) => queuedIndex !== index))
+  }
+
+  const save = async () => {
+    const hasCurrentPlanInput = form.name.trim().length > 0
+    const pendingPlans = [...queuedPlans]
+
+    if (hasCurrentPlanInput) {
+      pendingPlans.push(normalizePlanPayload(form))
+    }
+
+    if (pendingPlans.length === 0) {
+      setError('Vui lòng nhập ít nhất một gói hợp lệ.')
+      return
+    }
+
+    const invalidIndex = pendingPlans.findIndex(
+      (plan) => !plan.tier || !plan.billingCycle || plan.price === undefined || Number.isNaN(plan.price),
+    )
+
+    if (invalidIndex >= 0) {
+      setError(`Gói thứ ${invalidIndex + 1} chưa đủ dữ liệu.`)
+      return
+    }
+
+    try {
+      setSaving(true)
+      setError('')
+      await api.post('/v1/subscription-plans', pendingPlans)
+      onSaved()
+      onClose()
+    } catch (saveError) {
+      console.error(saveError)
+      setError(saveError?.response?.data?.message || saveError?.message || 'Không thể tạo các gói thanh toán.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Tạo nhanh nhiều gói"
+      size="large"
+      subtitle="Mẫu nhập giống tạo gói mới, bạn có thể thêm nhiều gói rồi lưu một lần"
+    >
+      <div className="plan-editor-shell bulk-create-plan-shell">
+        <div className="modal-form payment-plan-form plan-editor-form">
+          <div className="modal-form-section-card">
+            <div className="modal-form-section-title">Thông tin gói</div>
+            <div className="modal-form-grid payment-form-main-grid">
+              <div className="modal-form-group">
+                <label className="form-label">Tên gói</label>
+                <input
+                  value={form.name || ''}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  className="form-input"
+                  placeholder="Premium Tháng"
+                />
+              </div>
+              <div className="modal-form-group">
+                <label className="form-label">Plan ID</label>
+                <input value={planIdPreview} readOnly className="form-input" placeholder="premium-thang-1" />
+              </div>
+            </div>
+
+            <div className="modal-form-grid">
+              <div className="modal-form-group">
+                <label className="form-label">Hạng</label>
+                <select value={form.tier || 'premium'} onChange={(event) => setForm({ ...form, tier: event.target.value })} className="form-input">
+                  <option value="free">Miễn phí</option>
+                  <option value="premium">Cao cấp</option>
+                </select>
+              </div>
+              <div className="modal-form-group">
+                <label className="form-label">Chu kỳ</label>
+                <select
+                  value={form.billingCycle || 'monthly'}
+                  onChange={(event) => setForm({ ...form, billingCycle: event.target.value })}
+                  className="form-input"
+                >
+                  <option value="free">Miễn phí</option>
+                  <option value="monthly">Hàng tháng</option>
+                  <option value="yearly">Hàng năm</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="modal-form-grid">
+              <div className="modal-form-group">
+                <label className="form-label">Giá</label>
+                <input
+                  type="number"
+                  value={form.price ?? 0}
+                  onChange={(event) => setForm({ ...form, price: Number(event.target.value) })}
+                  className="form-input"
+                />
+              </div>
+              <div className="modal-form-group">
+                <label className="form-label">Tiền tệ</label>
+                <input
+                  value={form.currency || 'VND'}
+                  onChange={(event) => setForm({ ...form, currency: event.target.value })}
+                  className="form-input"
+                  placeholder="VND, USD..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="modal-form-section-card">
+            <div className="modal-form-section-title">Tính năng và trạng thái</div>
+            <div className="modal-form-group">
+              <label className="form-label">Tính năng</label>
+              <div className="payment-plan-feature-input-row">
+                <input
+                  value={featureInput}
+                  onChange={(event) => setFeatureInput(event.target.value)}
+                  placeholder="Thêm một tính năng..."
+                  className="form-input"
+                />
+                <button type="button" className="button-primary" onClick={addFeature}>Thêm</button>
+              </div>
+              {Array.isArray(form.features) && form.features.length > 0 && (
+                <div className="modal-form-list">
+                  {form.features.map((feature, index) => (
+                    <div key={index} className="modal-form-list-item">
+                      <span>{feature}</span>
+                      <button type="button" className="small-icon-button danger" onClick={() => removeFeature(index)}>
+                        <FiX size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-form-group">
+              <label className="payment-plan-popular-toggle">
+                <input
+                  type="checkbox"
+                  checked={!!form.popularPlan}
+                  onChange={(event) => setForm({ ...form, popularPlan: event.target.checked })}
+                />
+                <span>Đánh dấu là gói phổ biến</span>
+              </label>
+            </div>
+          </div>
+
+          {error ? <div className="bulk-plan-error">{error}</div> : null}
+        </div>
+
+        <aside className="plan-preview-panel bulk-create-plan-preview">
+          <div className="plan-preview-card">
+            <span className="plan-preview-eyebrow">Live preview</span>
+            <h3>{form.name || 'Tên gói sẽ xuất hiện ở đây'}</h3>
+            <div className="plan-preview-price">
+              {formatCurrency(form.price, form.currency)}
+            </div>
+            <div className="plan-preview-badges">
+              <PlanPill tone={form.tier === 'premium' ? 'primary' : 'neutral'}>
+                {tierLabel(form.tier)}
+              </PlanPill>
+              <PlanPill tone="info">{cycleLabel(form.billingCycle)}</PlanPill>
+              <PopularBadge isPopular={form.popularPlan} />
+            </div>
+            <p className="plan-preview-description">{planIdPreview}</p>
+            <div className="plan-preview-list">
+              {(form.features || []).slice(0, 5).map((feature, index) => (
+                <div key={index} className="plan-preview-feature">
+                  <FiCheck size={14} />
+                  <span>{feature}</span>
+                </div>
+              ))}
+              {(form.features || []).length === 0 ? (
+                <p className="plan-muted-text">Thêm tính năng để preview chính xác hơn.</p>
+              ) : null}
+            </div>
+          </div>
+
+          <button type="button" className="button-secondary bulk-plan-add-button" onClick={addCurrentPlan}>
+            <FiPlus size={16} />
+            Thêm gói
+          </button>
+
+          {queuedPlans.length > 0 ? (
+            <div className="bulk-plan-queued-list">
+              <div className="bulk-plan-queued-head">Đã thêm {queuedPlans.length} gói</div>
+              {queuedPlans.map((plan, index) => (
+                <div key={`${plan.name}-${index}`} className="bulk-plan-queued-item">
+                  <div>
+                    <strong>{plan.name}</strong>
+                    <p>{plan.planId}</p>
+                  </div>
+                  <button type="button" className="small-icon-button danger" onClick={() => removeQueuedPlan(index)}>
+                    <FiX size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </aside>
+      </div>
+
+      <div className="modal-footer">
+        <button className="button-secondary" onClick={onClose} disabled={saving}>
+          Hủy
+        </button>
+        <button className="button-primary" onClick={save} disabled={saving}>
+          {saving ? 'Đang lưu...' : `Tạo tất cả (${nextSubmitCount})`}
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
 function EditPlanModal({ plan, onClose, onSaved }) {
   const [form, setForm] = useState(
     plan || {
@@ -134,6 +441,9 @@ function EditPlanModal({ plan, onClose, onSaved }) {
 
   if (!plan) return null
 
+  const isExistingPlan = !!form._id
+  const planIdPreview = buildPlanIdPreview(form.name)
+
   const addFeature = () => {
     const nextValue = featureInput.trim()
     if (!nextValue) return
@@ -146,7 +456,10 @@ function EditPlanModal({ plan, onClose, onSaved }) {
   }
 
   const save = async () => {
-    const payload = { ...form }
+    const payload = {
+      ...form,
+      planId: isExistingPlan ? form.planId : planIdPreview,
+    }
     try {
       if (form._id) {
         await api.put('/v1/subscription-plans/' + form._id, payload)
@@ -184,13 +497,17 @@ function EditPlanModal({ plan, onClose, onSaved }) {
               </div>
               <div className="modal-form-group">
                 <label className="form-label">Plan ID</label>
-                <input
-                  value={form.planId || ''}
-                  onChange={(event) => setForm({ ...form, planId: event.target.value })}
-                  disabled={!!form._id}
-                  className="form-input"
-                  placeholder="plan_monthly_123"
-                />
+                {isExistingPlan ? (
+                  <input
+                    value={form.planId || ''}
+                    onChange={(event) => setForm({ ...form, planId: event.target.value })}
+                    disabled={isExistingPlan}
+                    className="form-input"
+                    placeholder="plan_monthly_123"
+                  />
+                ) : (
+                  <input value={planIdPreview} readOnly className="form-input" placeholder="premium-thang" />
+                )}
               </div>
             </div>
 
@@ -209,6 +526,7 @@ function EditPlanModal({ plan, onClose, onSaved }) {
                   onChange={(event) => setForm({ ...form, billingCycle: event.target.value })}
                   className="form-input"
                 >
+                  <option value="free">Miễn phí</option>
                   <option value="monthly">Hàng tháng</option>
                   <option value="yearly">Hàng năm</option>
                 </select>
@@ -292,7 +610,7 @@ function EditPlanModal({ plan, onClose, onSaved }) {
               <PopularBadge isPopular={form.popularPlan} />
             </div>
             <p className="plan-preview-description">
-              {form.planId || 'plan_id'}
+              {isExistingPlan ? (form.planId || 'plan_id') : planIdPreview}
             </p>
             <div className="plan-preview-list">
               {(form.features || []).slice(0, 5).map((feature, index) => (
@@ -379,6 +697,7 @@ export default function PaymentMethods() {
   const [query, setQuery] = useState('')
   const [detail, setDetail] = useState(null)
   const [editing, setEditing] = useState(null)
+  const [bulkCreating, setBulkCreating] = useState(false)
   const [loading, setLoading] = useState(false)
   const [tierFilter, setTierFilter] = useState('all')
 
@@ -459,10 +778,16 @@ export default function PaymentMethods() {
         subtitle="Quản lý, tạo và cập nhật các gói subscription"
         icon={<FiDollarSign size={22} />}
         actions={(
-          <button className="button-primary payment-plans-cta" onClick={() => setEditing({})}>
-            <FiPlus size={16} />
-            Tạo gói mới
-          </button>
+          <div className="payment-plans-header-actions">
+            <button className="button-secondary payment-plans-cta" onClick={() => setBulkCreating(true)}>
+              <FiGrid size={16} />
+              Nhập nhiều gói
+            </button>
+            <button className="button-primary payment-plans-cta" onClick={() => setEditing({})}>
+              <FiPlus size={16} />
+              Tạo gói mới
+            </button>
+          </div>
         )}
       />
 
@@ -501,7 +826,7 @@ export default function PaymentMethods() {
             <h2>Danh sách gói thanh toán</h2>
             <p>{filtered.length} gói phù hợp với bộ lọc hiện tại.</p>
           </div>
-          <button type="button" className="button-secondary" onClick={() => setEditing({})}>
+          <button type="button" className="button-secondary" onClick={() => setBulkCreating(true)}>
             <FiGrid size={16} />
             Tạo nhanh
           </button>
@@ -528,6 +853,7 @@ export default function PaymentMethods() {
 
       <DetailModal item={detail} onClose={() => setDetail(null)} />
       <EditPlanModal plan={editing} onClose={() => setEditing(null)} onSaved={load} />
+      <BulkCreatePlanModal isOpen={bulkCreating} onClose={() => setBulkCreating(false)} onSaved={load} />
     </div>
   )
 }
