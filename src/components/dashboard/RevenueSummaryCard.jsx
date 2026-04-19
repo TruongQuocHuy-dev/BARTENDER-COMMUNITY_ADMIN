@@ -39,7 +39,7 @@ export default function RevenueSummaryCard({ totalRevenue, formatCurrency, month
         Tong doanh thu tu cac goi Premium.
       </p>
 
-      <Link to="/reports" className="dashboard-link-button">
+      <Link to="/reports/revenue" className="dashboard-link-button">
         Xem bao cao chi tiet
         <ArrowRight size={14} />
       </Link>

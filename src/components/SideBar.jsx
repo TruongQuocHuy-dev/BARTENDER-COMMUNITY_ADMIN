@@ -2,14 +2,24 @@ import React, { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
   LayoutDashboard, Users, Utensils, FolderOpen,
-  Image as ImageIcon, FileText, AlertCircle, CreditCard,
-  ChevronLeft, ChevronRight, Coffee, X, BarChart3, Bell, Settings
+  Image as ImageIcon, FileText, CreditCard,
+  ChevronLeft, ChevronRight, Coffee, X, BarChart3, Bell, Settings,
+  DollarSign, ShieldAlert, LifeBuoy, ChevronDown
 } from "lucide-react"
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(false)
   const shouldCollapse = collapsed && !isMobileOpen
+
+  const [expandedMenus, setExpandedMenus] = useState(() => {
+    try {
+      const stored = localStorage.getItem("admin_sidebar_expanded")
+      return stored ? JSON.parse(stored) : {}
+    } catch (e) {
+      return {}
+    }
+  })
 
   useEffect(() => {
     try {
@@ -35,7 +45,16 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
       title: "Tong quan",
       items: [
         { path: "/", label: "Bang dieu khien", icon: LayoutDashboard },
-        { path: "/reports", label: "Bao cao", icon: BarChart3 },
+        {
+          path: "/reports",
+          label: "Bao cao",
+          icon: BarChart3,
+          children: [
+            { path: "/reports/revenue", label: "Doanh thu", icon: DollarSign },
+            { path: "/reports/user-reports", label: "Bao cao nguoi dung", icon: ShieldAlert },
+            { path: "/reports/support", label: "Ho tro", icon: LifeBuoy },
+          ],
+        },
       ],
     },
     {
@@ -57,6 +76,44 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
       ],
     },
   ]
+
+  // Sync expanded state with current route
+  useEffect(() => {
+    const newExpanded = { ...expandedMenus }
+    let changed = false
+    menuGroups.forEach(group => {
+      group.items.forEach(item => {
+        if (item.children) {
+          const isChildActive = item.children.some(child => location.pathname.startsWith(child.path))
+          if (isChildActive && !newExpanded[item.path]) {
+            newExpanded[item.path] = true
+            changed = true
+          }
+        }
+      })
+    })
+    if (changed) {
+      setExpandedMenus(newExpanded)
+    }
+  }, [location.pathname])
+
+  // Save expanded state
+  useEffect(() => {
+    try {
+      localStorage.setItem("admin_sidebar_expanded", JSON.stringify(expandedMenus))
+    } catch (e) { }
+  }, [expandedMenus])
+
+  const toggleMenu = (path, e) => {
+    if (shouldCollapse) return // Don't toggle when collapsed side-wise
+    
+    // If it's a link click and we have children, we might want to just toggle or navigate
+    // Here we'll toggle
+    setExpandedMenus(prev => ({
+      ...prev,
+      [path]: !prev[path]
+    }))
+  }
 
   const isActive = (path) => {
     if (path === "/" && location.pathname !== "/") return false
@@ -109,21 +166,67 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
               {group.items.map((item) => {
                 const active = isActive(item.path)
                 const Icon = item.icon
+                const hasChildren = Array.isArray(item.children) && item.children.length > 0
+                const isExpanded = expandedMenus[item.path]
+                const childActive = hasChildren ? item.children.some((child) => isActive(child.path)) : false
+                const rootActive = active || childActive
 
                 return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`sidebar-item ${active ? "active" : ""}`}
-                    title={shouldCollapse ? item.label : ""}
-                  >
-                    <span className="sidebar-icon">
-                      <Icon size={20} strokeWidth={active ? 2.5 : 2} />
-                    </span>
-                    {!shouldCollapse && (
-                      <span className="sidebar-label">{item.label}</span>
+                  <div key={item.path} className={`sidebar-item-wrap ${isExpanded ? "expanded" : ""}`}>
+                    {hasChildren ? (
+                      <div
+                        className={`sidebar-item ${rootActive ? "active" : ""} ${hasChildren ? "has-children" : ""}`}
+                        title={shouldCollapse ? item.label : ""}
+                        onClick={(e) => toggleMenu(item.path, e)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <span className="sidebar-icon">
+                          <Icon size={20} strokeWidth={rootActive ? 2.5 : 2} />
+                        </span>
+                        {!shouldCollapse && (
+                          <>
+                            <span className="sidebar-label">{item.label}</span>
+                            <span className={`menu-chevron ${isExpanded ? "rotated" : ""}`}>
+                              <ChevronDown size={14} />
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        to={item.path}
+                        className={`sidebar-item ${rootActive ? "active" : ""}`}
+                        title={shouldCollapse ? item.label : ""}
+                      >
+                        <span className="sidebar-icon">
+                          <Icon size={20} strokeWidth={rootActive ? 2.5 : 2} />
+                        </span>
+                        {!shouldCollapse && (
+                          <span className="sidebar-label">{item.label}</span>
+                        )}
+                      </Link>
                     )}
-                  </Link>
+
+                    {!shouldCollapse && hasChildren && (
+                      <div className={`sidebar-submenu ${isExpanded ? "show" : ""}`}>
+                        {item.children.map((child) => {
+                          const ChildIcon = child.icon
+                          const childIsActive = isActive(child.path)
+
+                          return (
+                            <Link
+                              key={child.path}
+                              to={child.path}
+                              className={`sidebar-subitem ${childIsActive ? "active" : ""}`}
+                            >
+                              <ChildIcon size={14} />
+                              <span>{child.label}</span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </div>
@@ -141,3 +244,4 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
     </>
   )
 }
+

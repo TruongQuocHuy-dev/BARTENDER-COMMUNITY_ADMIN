@@ -88,6 +88,7 @@ export default function App() {
         <Route path="/banners" element={<ProtectedLayout><Banners /></ProtectedLayout>} />
         <Route path="/posts" element={<ProtectedLayout><Posts /></ProtectedLayout>} />
         <Route path="/reports" element={<ProtectedLayout><Reports /></ProtectedLayout>} />
+        <Route path="/reports/:section" element={<ProtectedLayout><Reports /></ProtectedLayout>} />
         <Route path="/notifications" element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
         <Route path="/payment-methods" element={<ProtectedLayout><PaymentMethods /></ProtectedLayout>} />
         <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
