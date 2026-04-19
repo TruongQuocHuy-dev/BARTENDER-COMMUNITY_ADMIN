@@ -10,6 +10,7 @@ import './styles/pages.css'
 import './styles/components/modal.css'
 import './styles/components/upload.css'
 import './styles/components/modal-form.css'
+import './styles/components/banner-form.css'
 
 applyThemeVariables()
 
