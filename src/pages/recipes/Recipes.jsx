@@ -12,6 +12,12 @@ import PageHeader from '../../components/PageHeader'
 import Modal from '../../components/Modal'
 import TableActionMenu from '../../components/TableActionMenu';
 
+const normalizeRecipeName = (value = '') =>
+    String(value)
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+
 // --- DETAIL MODAL (Giữ nguyên giao diện đẹp) ---
 function DetailModal({ item, onClose }) {
     if (!item) return null
@@ -139,6 +145,9 @@ export default function Recipes() {
     const [isBulkApproving, setIsBulkApproving] = useState(false)
     const [selectedIds, setSelectedIds] = useState([])
     const [isBulkDeleting, setIsBulkDeleting] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [deleteTarget, setDeleteTarget] = useState(null)
+    const [importPreview, setImportPreview] = useState(null)
     const [isImporting, setIsImporting] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
     const fileInputRef = useRef(null)
@@ -166,9 +175,51 @@ export default function Recipes() {
         try { const data = await api.get('/categories'); setCategories(data); } catch (e) { console.error(e) }
     }
 
-    const remove = async (id) => {
-        if (!confirm('Bạn có chắc chắn muốn xóa công thức này?')) return
-        try { await api.del('/recipes/' + id); load(); } catch (e) { console.error(e) }
+    const requestDeleteRecipe = (recipe) => {
+        if (!recipe?._id) return;
+        setDeleteTarget({
+            type: 'single',
+            id: recipe._id,
+            name: recipe.name || 'công thức này',
+        });
+    }
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+
+        setIsDeleting(true);
+        if (deleteTarget.type === 'bulk') {
+            setIsBulkDeleting(true);
+        }
+        try {
+            if (deleteTarget.type === 'single') {
+                await api.del('/recipes/' + deleteTarget.id);
+                alert('Đã xóa công thức thành công.');
+            } else if (deleteTarget.type === 'bulk') {
+                const ids = Array.isArray(deleteTarget.ids) ? deleteTarget.ids : [];
+                const results = await Promise.allSettled(ids.map((id) => api.del('/recipes/' + id)));
+
+                const successCount = results.filter(r => r.status === 'fulfilled').length;
+                const failedCount = results.length - successCount;
+
+                if (failedCount > 0) {
+                    alert(`Đã xóa ${successCount}/${results.length} công thức. Có ${failedCount} công thức xóa thất bại.`);
+                } else {
+                    alert(`Đã xóa thành công ${successCount} công thức.`);
+                }
+
+                setSelectedIds([]);
+            }
+
+            setDeleteTarget(null);
+            await load();
+        } catch (e) {
+            console.error(e);
+            alert(e?.message || 'Xóa công thức thất bại.');
+        } finally {
+            setIsDeleting(false);
+            setIsBulkDeleting(false);
+        }
     }
 
     const handleApprove = async (id) => {
@@ -272,33 +323,11 @@ export default function Recipes() {
             return;
         }
 
-        if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} công thức đã chọn?`)) {
-            return;
-        }
-
-        setIsBulkDeleting(true);
-        try {
-            const results = await Promise.allSettled(
-                selectedIds.map(id => api.del('/recipes/' + id))
-            );
-
-            const successCount = results.filter(r => r.status === 'fulfilled').length;
-            const failedCount = results.length - successCount;
-
-            if (failedCount > 0) {
-                alert(`Đã xóa ${successCount}/${results.length} công thức. Có ${failedCount} công thức xóa thất bại.`);
-            } else {
-                alert(`Đã xóa thành công ${successCount} công thức.`);
-            }
-
-            setSelectedIds([]);
-            await load();
-        } catch (e) {
-            console.error(e);
-            alert(e?.message || 'Xóa hàng loạt thất bại.');
-        } finally {
-            setIsBulkDeleting(false);
-        }
+        setDeleteTarget({
+            type: 'bulk',
+            ids: [...selectedIds],
+            count: selectedIds.length,
+        });
     };
 
     // Reset filters
@@ -591,20 +620,66 @@ export default function Recipes() {
                 return;
             }
 
-            if (!confirm(`Import ${recipes.length} công thức từ file này?`)) {
-                return;
-            }
+            const existingNameSet = new Set(
+                items.map((recipe) => normalizeRecipeName(recipe?.name)).filter(Boolean)
+            );
 
-            setIsImporting(true);
-            const result = await api.post('/admin/recipes/import', { recipes });
-            alert(`${result.message}. Thành công: ${result.insertedCount}, lỗi: ${result.failedCount}`);
-            await load();
+            const duplicateInFile = new Set();
+            const newNameSet = new Set();
+            const duplicateExisting = new Set();
+            const importableRecipes = [];
+
+            recipes.forEach((recipe) => {
+                const normalizedName = normalizeRecipeName(recipe.name);
+                if (!normalizedName) return;
+
+                if (existingNameSet.has(normalizedName)) {
+                    duplicateExisting.add(recipe.name);
+                    return;
+                }
+
+                if (newNameSet.has(normalizedName)) {
+                    duplicateInFile.add(recipe.name);
+                    return;
+                }
+
+                newNameSet.add(normalizedName);
+                importableRecipes.push(recipe);
+            });
+
+            setImportPreview({
+                fileName: file.name,
+                totalRows: recipes.length,
+                importableRecipes,
+                duplicateExisting: Array.from(duplicateExisting),
+                duplicateInFile: Array.from(duplicateInFile),
+            });
         } catch (e) {
             console.error('Import recipes error:', e);
             alert(e?.message || 'Import thất bại. Vui lòng kiểm tra định dạng file.');
         } finally {
             setIsImporting(false);
             if (event.target) event.target.value = '';
+        }
+    };
+
+    const confirmImportFromPreview = async () => {
+        if (!importPreview?.importableRecipes?.length) {
+            return;
+        }
+
+        try {
+            setIsImporting(true);
+            const result = await api.post('/admin/recipes/import', { recipes: importPreview.importableRecipes });
+            const skippedCount = (importPreview.duplicateExisting?.length || 0) + (importPreview.duplicateInFile?.length || 0);
+            alert(`${result.message}. Thành công: ${result.insertedCount}, lỗi: ${result.failedCount}${skippedCount > 0 ? `, bỏ qua trùng tên: ${skippedCount}` : ''}`);
+            setImportPreview(null);
+            await load();
+        } catch (e) {
+            console.error('Confirm import recipes error:', e);
+            alert(e?.message || 'Import thất bại. Vui lòng thử lại.');
+        } finally {
+            setIsImporting(false);
         }
     };
 
@@ -618,10 +693,10 @@ export default function Recipes() {
                         <button
                             onClick={handleBulkDelete}
                             className="button-danger"
-                            disabled={isBulkDeleting || selectedCount === 0}
+                            disabled={(isBulkDeleting || isDeleting) || selectedCount === 0}
                             style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                         >
-                            <FiTrash2 size={16} /> {isBulkDeleting ? 'Đang xóa...' : `Xóa đã chọn (${selectedCount})`}
+                            <FiTrash2 size={16} /> {(isBulkDeleting || isDeleting) ? 'Đang xóa...' : `Xóa đã chọn (${selectedCount})`}
                         </button>
                         <button
                             onClick={() => fileInputRef.current?.click()}
@@ -821,7 +896,7 @@ export default function Recipes() {
                                                     <TableActionMenu
                                                         onView={() => setDetail(r)}
                                                         onEdit={() => setEditing(r)}
-                                                        onDelete={() => remove(r._id)}
+                                                        onDelete={() => requestDeleteRecipe(r)}
                                                         customActions={r.status === 'pending' ? [
                                                             {
                                                                 label: 'Duyệt',
@@ -859,6 +934,104 @@ export default function Recipes() {
 
             {editing && <RecipeForm recipe={typeof editing === 'object' ? editing : null} onClose={() => setEditing(false)} onSaved={() => { load(); setEditing(false); }} />}
             <DetailModal item={detail} onClose={() => setDetail(null)} />
+            <Modal
+                isOpen={!!deleteTarget}
+                onClose={() => !isDeleting && setDeleteTarget(null)}
+                title="Xác nhận xóa"
+                size="small"
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <p style={{ margin: 0, color: '#374151' }}>
+                        {deleteTarget?.type === 'single'
+                            ? `Bạn có chắc chắn muốn xóa công thức "${deleteTarget?.name}"?`
+                            : `Bạn có chắc chắn muốn xóa ${deleteTarget?.count || 0} công thức đã chọn?`}
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                        <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => setDeleteTarget(null)}
+                            disabled={isDeleting}
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            type="button"
+                            className="button-danger"
+                            onClick={confirmDelete}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? 'Đang xóa...' : 'Xác nhận xóa'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={!!importPreview}
+                onClose={() => !isImporting && setImportPreview(null)}
+                title="Xác nhận import công thức"
+                size="large"
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ color: '#374151', lineHeight: 1.5 }}>
+                        <div><strong>File:</strong> {importPreview?.fileName}</div>
+                        <div><strong>Tổng bản ghi hợp lệ đọc được:</strong> {importPreview?.totalRows || 0}</div>
+                        <div><strong>Có thể import:</strong> {importPreview?.importableRecipes?.length || 0}</div>
+                        <div><strong>Trùng với dữ liệu hiện có:</strong> {importPreview?.duplicateExisting?.length || 0}</div>
+                        <div><strong>Trùng trong chính file:</strong> {importPreview?.duplicateInFile?.length || 0}</div>
+                    </div>
+
+                    {importPreview?.duplicateExisting?.length > 0 && (
+                        <div>
+                            <div style={{ fontWeight: 600, color: '#b45309', marginBottom: 6 }}>
+                                Danh sách tên trùng với dữ liệu hiện có
+                            </div>
+                            <div style={{ maxHeight: 140, overflowY: 'auto', border: '1px solid #f59e0b55', borderRadius: 8, padding: 10, background: '#fffbeb' }}>
+                                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                                    {importPreview.duplicateExisting.map((name, idx) => (
+                                        <li key={`dup-existing-${idx}`} style={{ color: '#78350f', marginBottom: 4 }}>{name}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
+                    {importPreview?.duplicateInFile?.length > 0 && (
+                        <div>
+                            <div style={{ fontWeight: 600, color: '#92400e', marginBottom: 6 }}>
+                                Danh sách tên bị trùng trong file
+                            </div>
+                            <div style={{ maxHeight: 140, overflowY: 'auto', border: '1px solid #f59e0b55', borderRadius: 8, padding: 10, background: '#fff7ed' }}>
+                                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                                    {importPreview.duplicateInFile.map((name, idx) => (
+                                        <li key={`dup-file-${idx}`} style={{ color: '#7c2d12', marginBottom: 4 }}>{name}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                        <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={() => setImportPreview(null)}
+                            disabled={isImporting}
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            type="button"
+                            className="button-primary"
+                            onClick={confirmImportFromPreview}
+                            disabled={isImporting || !(importPreview?.importableRecipes?.length > 0)}
+                        >
+                            {isImporting ? 'Đang import...' : `Xác nhận import (${importPreview?.importableRecipes?.length || 0})`}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     )
 }

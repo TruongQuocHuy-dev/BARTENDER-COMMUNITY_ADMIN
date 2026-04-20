@@ -16,6 +16,12 @@ const stickyHeaderStyle = {
   borderBottom: '1px solid #e5e7eb' // Thêm đường viền để phân biệt
 };
 
+const normalizeRecipeName = (value = '') =>
+  String(value)
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+
 export default function RecipeForm({ recipe, onClose, onSaved }) {
   const [form, setForm] = useState(recipe || {
     name: '',
@@ -147,6 +153,18 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
       // Check steps are not empty
       if (form.steps.some(step => !step.trim())) return setError('Please fill all steps');
 
+      const recipeName = form.name.trim();
+      const allRecipes = await api.get('/admin/recipes/all');
+      const duplicated = (Array.isArray(allRecipes) ? allRecipes : []).find((item) => {
+        if (recipe?._id && item?._id === recipe._id) return false;
+        return normalizeRecipeName(item?.name) === normalizeRecipeName(recipeName);
+      });
+
+      if (duplicated) {
+        setError(`Tên công thức đã tồn tại: ${duplicated.name}`);
+        return;
+      }
+
       const user = getCurrentUser();
       if (!user || !user._id) {
         setError('Bạn phải đăng nhập để thực hiện. Vui lòng đăng nhập lại.');
@@ -154,7 +172,7 @@ export default function RecipeForm({ recipe, onClose, onSaved }) {
       }
 
       const formData = new FormData();
-      formData.append('name', form.name.trim());
+      formData.append('name', recipeName);
       formData.append('description', form.description?.trim() || '');
       formData.append('category', form.category);
       formData.append('difficulty', form.difficulty);
