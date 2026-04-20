@@ -581,6 +581,39 @@ select.form-input {
   gap: 0;
 }
 
+/* Reset legacy generic modal/form rules inside banner detail view */
+.banner-detail-container .banner-detail-section-title {
+  margin: 0 0 10px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  background-clip: border-box !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+}
+
+.banner-detail-container .banner-detail-field label {
+  margin-bottom: 0 !important;
+  position: static !important;
+  display: inline-flex !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+}
+
+.banner-detail-container .banner-detail-field label::after {
+  content: none !important;
+}
+
 .banner-detail-hero {
   display: grid;
   grid-template-columns: 200px 1fr;

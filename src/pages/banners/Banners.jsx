@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import api from '../../api/client'
-import { FiEdit, FiTrash2, FiEye, FiPlus, FiSearch } from 'react-icons/fi'
+import { FiEdit, FiTrash2, FiEye, FiPlus, FiSearch, FiFilter, FiChevronLeft, FiChevronRight, FiRefreshCw } from 'react-icons/fi'
 import { CheckCircle, AlertTriangle, Eye, Clock, Zap, MessageSquare } from 'lucide-react'
 import BannerForm from '../../components/banners/BannerForm'
 import Modal from '../../components/Modal'
@@ -8,6 +8,7 @@ import PageHeader from '../../components/PageHeader'
 import TableActionMenu from '../../components/TableActionMenu';
 import BadgePill from '../../components/common/BadgePill';
 import FormSearchField from '../../components/common/FormSearchField';
+import FormSelectField from '../../components/common/FormSelectField';
 import { Image as BannerIcon } from 'lucide-react'
 
 // --- Helper Component: Status Badge ---
@@ -38,134 +39,129 @@ function DetailModal({ item, onClose }) {
 
   const formatDate = (date) => {
     if (!date) return '—';
-    return new Date(date).toLocaleDateString('vi-VN', { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit' 
+    return new Date(date).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
     });
   };
 
   return (
     <Modal isOpen={!!item} onClose={onClose} title="Chi tiết Banner" size="medium">
-      <div className="banner-detail-container">
+      <div className="modal-form banner-detail-container">
         {/* Hero Section */}
         <div className="banner-detail-hero">
-        <div className="banner-detail-image-wrap">
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt={item.title} className="banner-detail-image" />
-          ) : (
-            <div className="banner-detail-image-empty">
-              <BannerIcon size={32} />
+          <div className="banner-detail-image-wrap">
+            {item.imageUrl ? (
+              <img src={item.imageUrl} alt={item.title} className="banner-detail-image" />
+            ) : (
+              <div className="banner-detail-image-empty">
+                <BannerIcon size={32} />
+              </div>
+            )}
+          </div>
+
+          <div className="banner-detail-hero-content">
+            <h1 className="banner-detail-title">{item.title}</h1>
+            <p className="banner-detail-description">{item.description}</p>
+            <div className="banner-detail-badges">
+              <StatusBadge status={item.status} />
+              {item.priority > 0 && (
+                <BadgePill
+                  label={`Độ ưu tiên: ${item.priority}`}
+                  icon={Zap}
+                  tone="orange"
+                />
+              )}
             </div>
-          )}
-        </div>
-
-        <div className="banner-detail-hero-content">
-          <h1 className="banner-detail-title">{item.title}</h1>
-          <p className="banner-detail-description">{item.description}</p>
-          <div className="banner-detail-badges">
-            <StatusBadge status={item.status} />
-            {item.priority > 0 && (
-              <BadgePill 
-                label={`Độ ưu tiên: ${item.priority}`} 
-                icon={Zap} 
-                tone="orange" 
-              />
-            )}
           </div>
         </div>
-      </div>
 
-      {/* KPI Grid */}
-      <div className="banner-kpi-grid">
-        <BannerKPICard 
-          icon={Eye} 
-          label="Lượt xem" 
-          value={item.views || 0} 
-          tone="blue" 
-        />
-        <BannerKPICard 
-          icon={Clock} 
-          label="Ngày tạo" 
-          value={formatDate(item.createdAt)} 
-          tone="purple" 
-        />
-        <BannerKPICard 
-          icon={Clock} 
-          label="Cập nhật" 
-          value={formatDate(item.updatedAt)} 
-          tone="pink" 
-        />
-      </div>
-
-      {/* Details Grid */}
-      <div className="banner-detail-section">
-        <h3 className="banner-detail-section-title">Thông tin liên kết</h3>
-        <div className="banner-detail-field">
-          <label>Link liên kết</label>
-          <div className="banner-detail-value-link">
-            <a href={item.link} target="_blank" rel="noopener noreferrer" className="banner-link">
-              {item.link}
-            </a>
-          </div>
+        {/* KPI Grid */}
+        <div className="banner-kpi-grid">
+          <BannerKPICard
+            icon={Eye}
+            label="Lượt xem"
+            value={item.views || 0}
+            tone="blue"
+          />
+          <BannerKPICard
+            icon={Clock}
+            label="Ngày tạo"
+            value={formatDate(item.createdAt)}
+            tone="purple"
+          />
+          <BannerKPICard
+            icon={Clock}
+            label="Cập nhật"
+            value={formatDate(item.updatedAt)}
+            tone="pink"
+          />
         </div>
-      </div>
 
-      {/* Content Detail */}
-      {item.contentDetail && (
+        {/* Details Grid */}
         <div className="banner-detail-section">
-          <h3 className="banner-detail-section-title">Nội dung chi tiết</h3>
-          <div className="banner-detail-content-box">
-            {item.contentDetail}
+          <h3 className="banner-detail-section-title">Thông tin liên kết</h3>
+          <div className="banner-detail-field">
+            <label>Link liên kết</label>
+            <div className="banner-detail-value-link">
+              <a href={item.link} target="_blank" rel="noopener noreferrer" className="banner-link">
+                {item.link}
+              </a>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Highlights */}
-      {Array.isArray(item.highlights) && item.highlights.length > 0 && (
-        <div className="banner-detail-section">
-          <h3 className="banner-detail-section-title">
-            <MessageSquare size={14} />
-            Điểm nổi bật
-          </h3>
-          <div className="banner-highlights-list">
-            {item.highlights.map((highlight, i) => (
-              <div key={i} className="banner-highlight-item">
-                <span className="banner-highlight-badge">{i + 1}</span>
-                <span>{highlight}</span>
-              </div>
-            ))}
+        {/* Content Detail */}
+        {item.contentDetail && (
+          <div className="banner-detail-section">
+            <h3 className="banner-detail-section-title">Nội dung chi tiết</h3>
+            <div className="banner-detail-content-box">
+              {item.contentDetail}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Schedule Info */}
-      {(item.startDate || item.endDate) && (
-        <div className="banner-detail-section">
-          <h3 className="banner-detail-section-title">Lịch chiếu</h3>
-          <div className="banner-schedule-grid">
-            {item.startDate && (
-              <div className="banner-schedule-item">
-                <span className="banner-schedule-label">Ngày bắt đầu</span>
-                <span className="banner-schedule-value">{formatDate(item.startDate)}</span>
-              </div>
-            )}
-            {item.endDate && (
-              <div className="banner-schedule-item">
-                <span className="banner-schedule-label">Ngày kết thúc</span>
-                <span className="banner-schedule-value">{formatDate(item.endDate)}</span>
-              </div>
-            )}
+        {/* Highlights */}
+        {Array.isArray(item.highlights) && item.highlights.length > 0 && (
+          <div className="banner-detail-section">
+            <h3 className="banner-detail-section-title">
+              <MessageSquare size={14} />
+              Điểm nổi bật
+            </h3>
+            <div className="banner-highlights-list">
+              {item.highlights.map((highlight, i) => (
+                <div key={i} className="banner-highlight-item">
+                  <span className="banner-highlight-badge">{i + 1}</span>
+                  <span>{highlight}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Footer Actions */}
-      <div className="banner-detail-footer">
-        <button onClick={onClose} className="banner-button-close">
-          Đóng
-        </button>
-      </div>
+        {/* Schedule Info */}
+        {(item.startDate || item.endDate) && (
+          <div className="banner-detail-section">
+            <h3 className="banner-detail-section-title">Lịch chiếu</h3>
+            <div className="banner-schedule-grid">
+              {item.startDate && (
+                <div className="banner-schedule-item">
+                  <span className="banner-schedule-label">Ngày bắt đầu</span>
+                  <span className="banner-schedule-value">{formatDate(item.startDate)}</span>
+                </div>
+              )}
+              {item.endDate && (
+                <div className="banner-schedule-item">
+                  <span className="banner-schedule-label">Ngày kết thúc</span>
+                  <span className="banner-schedule-value">{formatDate(item.endDate)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+
       </div>
     </Modal>
   );
@@ -175,8 +171,11 @@ function DetailModal({ item, onClose }) {
 export default function Banners() {
   const [items, setItems] = useState([])
   const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
   const [detail, setDetail] = useState(null)
   const [editing, setEditing] = useState(null) // Sẽ là true/false hoặc object
+  const ITEMS_PER_PAGE = 5
 
   useEffect(() => { load() }, [])
   const load = async () => {
@@ -190,13 +189,41 @@ export default function Banners() {
 
   const remove = async (id) => { if (!confirm('Bạn có chắc chắn muốn xóa banner này?')) return; await api.del('/banners/' + id); load() }
 
-  const filtered = items.filter(b => (b.title || '').toLowerCase().includes(query.toLowerCase()))
+  const filtered = useMemo(() => {
+    return items.filter((b) => {
+      const matchesQuery = (b.title || '').toLowerCase().includes(query.toLowerCase())
+      const matchesStatus = statusFilter === 'all' ? true : (b.status || 'active') === statusFilter
+      return matchesQuery && matchesStatus
+    })
+  }, [items, query, statusFilter])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [query, statusFilter])
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    return filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  }, [filtered, currentPage])
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage)
+    }
+  }
+
+  const clearFilters = () => {
+    setQuery('')
+    setStatusFilter('all')
+    setCurrentPage(1)
+  }
 
   return (
     <div className="admin-page">
       <PageHeader
         title="QUẢN LÝ QUẢNG CÁO"
-        subtitle={`Tổng ${items.length} banners`}
+        subtitle={`Hiển thị ${paginatedItems.length} / ${filtered.length} banners`}
         icon={<BannerIcon size={26} />}
         actions={(
           <button onClick={() => setEditing({})} className="button-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -209,9 +236,11 @@ export default function Banners() {
         style={{
           display: 'flex',
           width: '100%',
-          alignItems: 'center'
+          alignItems: 'center',
+          gap: 12,
+          flexWrap: 'wrap'
         }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+        <div style={{ position: 'relative', flex: '2 1 260px', minWidth: 0 }}>
           <FormSearchField
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -219,6 +248,40 @@ export default function Banners() {
             icon={FiSearch}
           />
         </div>
+
+        <div style={{ position: 'relative', flex: '1 1 220px', minWidth: 180 }}>
+          <FormSelectField
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            icon={FiFilter}
+            options={[
+              { value: 'all', label: 'Tất cả trạng thái' },
+              { value: 'active', label: 'Hoạt động' },
+              { value: 'inactive', label: 'Không hoạt động' },
+            ]}
+          />
+        </div>
+
+        {(query || statusFilter !== 'all') && (
+          <button
+            onClick={clearFilters}
+            title="Xóa bộ lọc"
+            style={{
+              height: 42,
+              width: 42,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              background: '#fff',
+              color: '#6b7280',
+              cursor: 'pointer',
+            }}
+          >
+            <FiRefreshCw />
+          </button>
+        )}
       </div>
 
       {/* --- Banners Table --- */}
@@ -231,11 +294,11 @@ export default function Banners() {
               <th style={tableHeaderStyle}>Nổi bật</th>
               <th style={tableHeaderStyle}>Trạng thái</th>
               <th style={tableHeaderStyle}>Lượt xem</th>
-              <th style={{ ...tableHeaderStyle, width: 120, textAlign: 'center' }}>Hành động</th>
+              <th className="actions-column" style={{ ...tableHeaderStyle, width: 96, textAlign: 'center' }}></th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map(b => (
+            {paginatedItems.map(b => (
               <tr key={b._id} style={{ borderBottom: '1px solid #eee' }}>
                 <td style={tableCellStyle} className="font-medium">{b.title}</td>
                 <td style={tableCellStyle}>
@@ -261,7 +324,7 @@ export default function Banners() {
                   <StatusBadge status={b.status || 'active'} />
                 </td>
                 <td style={tableCellStyle}>{b.views || 0}</td>
-                <td style={{ ...tableCellStyle, textAlign: 'center' }}>
+                <td className="actions-cell" style={{ ...tableCellStyle, textAlign: 'center' }}>
                   <TableActionMenu
                     onEdit={() => setEditing(b)}
                     onView={() => setDetail(b)}
@@ -272,6 +335,16 @@ export default function Banners() {
             ))}
           </tbody>
         </table>
+
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #e5e7eb', background: '#fff' }}>
+            <span style={{ fontSize: 13, color: '#6b7280' }}>Trang <strong>{currentPage}</strong> / {totalPages}</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="button-secondary" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', fontSize: 13 }}><FiChevronLeft size={14} /> Trước</button>
+              <button className="button-secondary" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', fontSize: 13 }}>Sau <FiChevronRight size={14} /></button>
+            </div>
+          </div>
+        )}
       </div>
 
       <DetailModal item={detail} onClose={() => setDetail(null)} />

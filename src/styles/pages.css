@@ -366,6 +366,24 @@
   box-shadow: -8px 0 14px -12px rgba(15, 23, 42, 0.35);
 }
 
+.banners-table .actions-column,
+.banners-table .actions-cell {
+  position: sticky;
+  right: 0;
+  width: 72px;
+  background: #fff;
+  z-index: 3;
+  text-align: center;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.banners-table thead .actions-column {
+  z-index: 4;
+  background: #f8fafc;
+  box-shadow: -8px 0 14px -12px rgba(15, 23, 42, 0.35);
+}
+
 .recipe-detail-modal {
   max-height: none;
   overflow: visible;
