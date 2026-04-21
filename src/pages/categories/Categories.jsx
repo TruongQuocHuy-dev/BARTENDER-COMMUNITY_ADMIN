@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import api from '../../api/client'
-import { FiEdit, FiTrash2, FiEye, FiPlus, FiSearch } from 'react-icons/fi'
+import { FiPlus, FiSearch, FiRefreshCw, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 
 import Modal from '../../components/Modal'
 import PageHeader from '../../components/PageHeader'
@@ -9,7 +9,15 @@ import { FolderOpen } from 'lucide-react'
 import TableActionMenu from '../../components/TableActionMenu';
 import '../../styles/components/modal-form.css';
 
-function EditCategoryModal({ cat, onClose, onSaved }) {
+const ITEMS_PER_PAGE = 10;
+
+const normalizeCategoryName = (value = '') =>
+  String(value)
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+
+function EditCategoryModal({ cat, onClose, onSaved, categories = [] }) {
   if (!cat) return null;
 
   const [form, setForm] = useState(cat || {})
@@ -48,13 +56,23 @@ function EditCategoryModal({ cat, onClose, onSaved }) {
         return
       }
 
+      const cleanedName = form.name.trim().replace(/\s+/g, ' ')
+      const duplicated = categories.find((item) => {
+        if (form._id && item?._id === form._id) return false
+        return normalizeCategoryName(item?.name) === normalizeCategoryName(cleanedName)
+      })
+      if (duplicated) {
+        setError(`Tên danh mục đã tồn tại: ${duplicated.name}`)
+        return
+      }
+
       if (!form.imageFile && !form.image) {
         setError('Image is required')
         return
       }
 
       const formData = new FormData()
-      formData.append('name', form.name.trim())
+      formData.append('name', cleanedName)
       if (form.imageFile) {
         formData.append('image', form.imageFile)
       }
@@ -270,28 +288,68 @@ function DetailModal({ item, onClose }) {
 export default function Categories() {
   const [cats, setCats] = useState([])
   const [query, setQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [editing, setEditing] = useState(null)
   const [detail, setDetail] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => { load() }, [])
   const load = async () => { try { setCats(await api.get('/categories')) } catch (e) { console.error(e) } }
 
-  const filteredCats = cats.filter(cat => {
-    const matchesQuery = cat.name.toLowerCase().includes(query.toLowerCase())
-    return matchesQuery
-  })
+  const filteredCats = useMemo(() => {
+    return cats.filter(cat => {
+      const matchesQuery = (cat.name || '').toLowerCase().includes(query.toLowerCase())
+      return matchesQuery
+    })
+  }, [cats, query])
 
-  const remove = async (id) => {
-    if (!confirm('Xóa danh mục này?')) return
-    await api.del('/categories/' + id)
-    load()
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [query])
+
+  const totalPages = Math.ceil(filteredCats.length / ITEMS_PER_PAGE)
+  const paginatedCats = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    return filteredCats.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  }, [filteredCats, currentPage])
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage)
+  }
+
+  const clearFilters = () => {
+    setQuery('')
+    setCurrentPage(1)
+  }
+
+  const requestDeleteCategory = (category) => {
+    if (!category?._id) return
+    setDeleteTarget({ id: category._id, name: category.name || 'danh mục này' })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget?.id) return
+
+    try {
+      setIsDeleting(true)
+      await api.del('/categories/' + deleteTarget.id)
+      setDeleteTarget(null)
+      await load()
+      alert('Đã xóa danh mục thành công.')
+    } catch (e) {
+      console.error(e)
+      alert(e?.message || 'Xóa danh mục thất bại.')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
     <div className="admin-page">
       <PageHeader
         title="QUẢN LÝ DANH MỤC"
-        subtitle={`Tổng ${cats.length} danh mục`}
+        subtitle={`Hiển thị ${paginatedCats.length} / ${filteredCats.length} danh mục`}
         icon={<FolderOpen size={26} />}
         actions={(
           <button className="button-primary" onClick={() => setEditing({})} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -304,12 +362,14 @@ export default function Categories() {
       <div className="search-filter-bar bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100"
         style={{
           display: 'flex',
+          gap: 12,
           width: '100%',
-          alignItems: 'center'
+          alignItems: 'center',
+          flexWrap: 'wrap'
         }}>
 
         {/* Search Box */}
-        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+        <div style={{ position: 'relative', flex: '2 1 300px', minWidth: 0 }}>
           <FiSearch size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', zIndex: 1 }} />
           <input
             type="text"
@@ -328,11 +388,24 @@ export default function Categories() {
             }}
           />
         </div>
+
+        {query && (
+          <button
+            onClick={clearFilters}
+            title="Xóa bộ lọc"
+            style={{
+              height: 42, width: 42, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', color: '#6b7280', cursor: 'pointer'
+            }}
+          >
+            <FiRefreshCw />
+          </button>
+        )}
       </div>
 
       {/* Modern Table */}
       <div className="table-container bg-white rounded-lg shadow-md" style={{ border: '1px solid rgba(0, 0, 0, 0.05)' }}>
-        {filteredCats.length === 0 ? (
+        {paginatedCats.length === 0 ? (
           <div className="empty-state text-center py-16 text-gray-400">
             <div style={{ fontSize: 40, marginBottom: 10 }}>📂</div>
             <p>Không tìm thấy danh mục nào.</p>
@@ -350,13 +423,11 @@ export default function Categories() {
                 <th style={{ padding: '14px 16px', textAlign: 'left', color: '#6b7280', fontWeight: 600, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', width: '15%' }}>
                   Số công thức
                 </th>
-                <th style={{ padding: '14px 16px', textAlign: 'center', color: '#6b7280', fontWeight: 600, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', width: '15%' }}>
-                  Hành động
-                </th>
+                <th style={{ padding: '14px 16px', textAlign: 'center', color: '#6b7280', fontWeight: 600, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', width: '15%' }}></th>
               </tr>
             </thead>
             <tbody>
-              {filteredCats.map(c => (
+              {paginatedCats.map(c => (
                 <tr key={c._id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                   <td style={{ padding: '14px 16px', fontSize: 14, fontWeight: 500, color: '#1f2937' }}>
                     {c.name}
@@ -394,22 +465,64 @@ export default function Categories() {
                       {c.count || 0} công thức
                     </span>
                   </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                    <TableActionMenu
-                      onView={() => setDetail(c)}
-                      onEdit={() => setEditing(c)}
-                      onDelete={() => remove(c._id)}
-                    />
+                  <td className="actions-cell recipe-actions-cell" style={{ padding: '14px 16px', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <TableActionMenu
+                        onView={() => setDetail(c)}
+                        onEdit={() => setEditing(c)}
+                        onDelete={() => requestDeleteCategory(c)}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
+
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #e5e7eb', background: '#fff' }}>
+            <span style={{ fontSize: 13, color: '#6b7280' }}>Trang <strong>{currentPage}</strong> / {totalPages}</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="button-secondary" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', fontSize: 13 }}><FiChevronLeft size={14} /> Trước</button>
+              <button className="button-secondary" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', fontSize: 13 }}>Sau <FiChevronRight size={14} /></button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <EditCategoryModal cat={editing} onClose={() => setEditing(null)} onSaved={load} />
+      <EditCategoryModal cat={editing} onClose={() => setEditing(null)} onSaved={load} categories={cats} />
       <DetailModal item={detail} onClose={() => setDetail(null)} />
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => !isDeleting && setDeleteTarget(null)}
+        title="Xác nhận xóa"
+        size="small"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p style={{ margin: 0, color: '#374151' }}>
+            {`Bạn có chắc chắn muốn xóa danh mục "${deleteTarget?.name}"?`}
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => setDeleteTarget(null)}
+              disabled={isDeleting}
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              className="button-danger"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Đang xóa...' : 'Xác nhận xóa'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
