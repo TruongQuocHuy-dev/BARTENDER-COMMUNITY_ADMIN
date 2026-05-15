@@ -28,19 +28,11 @@ import {
 
 // Định nghĩa các loại bộ lọc có thể có
 const FILTER_TYPES = {
-  ROLE: 'role',
   STATUS: 'status',
   SUBSCRIPTION: 'subscription'
 }
 
 const FILTER_OPTIONS = {
-  [FILTER_TYPES.ROLE]: {
-    label: 'Vai trò',
-    options: [
-      { value: 'user', label: 'Người dùng', icon: <FiUser size={14} /> },
-      { value: 'admin', label: 'Quản trị viên', icon: <FaCrown size={14} style={{ color: '#ef4444' }} /> }, // ĐÃ SỬA: FiCrown -> FaCrown
-    ]
-  },
   [FILTER_TYPES.STATUS]: {
     label: 'Khóa',
     options: [
@@ -53,7 +45,7 @@ const FILTER_OPTIONS = {
     label: 'Gói dịch vụ',
     options: [
       { value: 'free', label: 'Miễn phí', icon: <FiUser size={14} /> },
-      { value: 'premium', label: 'Cao cấp', icon: <FaCrown size={14} style={{ color: '#f59e0b' }} /> } // ĐÃ SỬA: FiCrown -> FaCrown
+      { value: 'premium', label: 'Cao cấp', icon: <FaCrown size={14} style={{ color: '#f59e0b' }} /> }
     ]
   }
 }
@@ -229,13 +221,6 @@ function EditUserModal({ user, onClose, onSaved }) {
               </select>
             </div>
             <div className="modal-form-group">
-              <label className="form-label">Vai trò</label>
-              <select value={form.role || "user"} onChange={(e) => setForm({ ...form, role: e.target.value })} className="form-input">
-                <option value="user">Người dùng</option>
-                <option value="admin">Quản trị viên</option>
-              </select>
-            </div>
-            <div className="modal-form-group">
               <label className="form-label">Tình trạng khóa</label>
               <select
                 value={form.isBanned ? 'banned' : 'active'}
@@ -273,7 +258,6 @@ function DetailUserModal({ user, onClose }) {
 
   const subscription = user.subscription || { tier: 'free', planId: 'free', endDate: null }
   const initials = (user.fullName || user.email || 'U').charAt(0).toUpperCase()
-  const roleLabel = user.role === 'admin' ? 'Quản trị viên' : 'Người dùng'
   const isBanned = user.isBanned === true
   const statusLabel = isBanned ? 'Đã khóa' : 'Không bị khóa'
   const statusTone = isBanned ? 'danger' : 'success'
@@ -313,7 +297,6 @@ function DetailUserModal({ user, onClose }) {
               </div>
 
               <div className="user-detail-hero-tags">
-                <BadgePill label={roleLabel} tone={user.role === 'admin' ? 'warning' : 'neutral'} />
                 <BadgePill label={statusLabel} tone={statusTone} />
               </div>
             </div>
@@ -362,7 +345,7 @@ function DetailUserModal({ user, onClose }) {
         <div className="modal-form-section-card user-detail-section-card">
           <div className="modal-form-section-title">
             <Clock3 size={16} />
-            Chi tiết quản trị
+            Chi tiết người dùng
           </div>
           <div className="user-detail-info-list">
             <div className="user-detail-info-item">
@@ -433,7 +416,9 @@ export default function Users() {
   const load = async () => {
     try {
       const data = await api.get("/admin/users")
-      setUsers(data)
+      // Lọc để chỉ lấy regular users
+      const regularUsers = data.filter(u => u.role === 'user')
+      setUsers(regularUsers)
     } catch (err) {
       console.error(err)
     }
@@ -454,8 +439,6 @@ export default function Users() {
       // Áp dụng tất cả bộ lọc đang hoạt động
       const matchesFilters = activeFilters.every(filter => {
         switch (filter.type) {
-          case FILTER_TYPES.ROLE:
-            return u.role === filter.value
           case FILTER_TYPES.STATUS:
             if (filter.value === 'all') return true
             if (filter.value === 'unbanned') return u.isBanned !== true
@@ -553,7 +536,6 @@ export default function Users() {
                 <th style={tableHeaderStyle}>Tên đầy đủ</th>
                 <th style={tableHeaderStyle}>Email</th>
                 <th style={tableHeaderStyle}>Gói DV</th>
-                <th style={tableHeaderStyle}>Vai trò</th>
                 <th style={tableHeaderStyle}>Trạng thái</th>
                 <th style={tableHeaderStyle}>Xác thực</th>
                 <th style={tableHeaderStyle}></th>
@@ -579,11 +561,6 @@ export default function Users() {
                         Hết hạn: {new Date(u.subscription.endDate).toLocaleDateString('vi-VN')}
                       </div>
                     )}
-                  </td>
-                  <td style={tableCellStyle}>
-                    <span style={{ fontWeight: 600, color: u.role === 'admin' ? '#ef4444' : '#374151' }}>
-                      {u.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
-                    </span>
                   </td>
                   <td style={tableCellStyle}>
                     <StatusBadge user={u} />

@@ -69,7 +69,15 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
     {
       title: "Nguoi dung & He thong",
       items: [
-        { path: "/users", label: "Nguoi dung", icon: Users },
+        {
+          path: "/users",
+          label: "Quan ly tai khoan",
+          icon: Users,
+          children: [
+            { path: "/users", label: "Nguoi dung", icon: Users },
+            { path: "/users/admin", label: "Quan tri vien", icon: ShieldAlert },
+          ],
+        },
         { path: "/notifications", label: "Thong bao", icon: Bell },
         { path: "/settings", label: "Cai dat", icon: Settings },
         { path: "/payment-methods", label: "Goi thanh toan", icon: CreditCard },
