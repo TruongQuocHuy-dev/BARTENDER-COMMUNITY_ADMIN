@@ -4,41 +4,76 @@ import {
   LogOut, User, ChevronDown, Menu, Bell, Settings, X
 } from "lucide-react"
 import NotificationDropdown from "./common/NotificationDropdown"
+import api from "../api/client"
 
-const notificationPreview = [
-  {
-    id: "n-1",
-    title: "Co report moi can duyet",
-    description: "He thong vua nhan 3 report trong 10 phut qua.",
-    time: "10 phut truoc",
-    unread: true,
-    type: "warning",
-  },
-  {
-    id: "n-2",
-    title: "Premium package duoc nang cap",
-    description: "Nguoi dung da nang cap goi Annual Premium.",
-    time: "35 phut truoc",
-    unread: true,
-    type: "success",
-  },
-  {
-    id: "n-3",
-    title: "Cong thuc moi dang cho phe duyet",
-    description: "Co 8 cong thuc can duoc admin xem xet.",
-    time: "1 gio truoc",
-    unread: false,
+const activityTypeMap = {
+  new_follower: {
+    title: "Có người theo dõi mới",
     type: "info",
   },
-]
+  new_like: {
+    title: "Nội dung vừa được thích",
+    type: "success",
+  },
+  new_comment: {
+    title: "Có bình luận mới",
+    type: "warning",
+  },
+  new_recipe: {
+    title: "Có công thức mới",
+    type: "info",
+  },
+  new_post: {
+    title: "Có bài viết mới",
+    type: "info",
+  },
+}
 
 export default function Header({ user, onLogout, onToggleMobileMenu, isMobileMenuOpen = false }) {
   const navigate = useNavigate()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotificationMenu, setShowNotificationMenu] = useState(false)
-  const [notifications, setNotifications] = useState(notificationPreview)
+  const [notifications, setNotifications] = useState([])
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
   const userDropdownRef = useRef(null)
   const notificationDropdownRef = useRef(null)
+
+  useEffect(() => {
+    loadNotifications()
+  }, [])
+
+  const loadNotifications = async () => {
+    try {
+      setNotificationsLoading(true)
+      const response = await api.get("/activities")
+      const items = Array.isArray(response?.activities)
+        ? response.activities
+        : Array.isArray(response)
+          ? response
+          : []
+
+      const mapped = items.map((activity) => {
+        const config = activityTypeMap[activity.type] || { title: "Thông báo hệ thống", type: "info" }
+        const actorName = activity.actor?.fullName || activity.actor?.username || "Hệ thống"
+
+        return {
+          id: activity._id,
+          title: config.title,
+          description: activity.message || `${actorName} đã tạo một thông báo mới.`,
+          time: activity.createdAt ? new Date(activity.createdAt).toLocaleString("vi-VN") : "Vừa xong",
+          unread: !activity.read,
+          type: config.type,
+        }
+      })
+
+      setNotifications(mapped)
+    } catch (error) {
+      console.error(error)
+      setNotifications([])
+    } finally {
+      setNotificationsLoading(false)
+    }
+  }
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -63,23 +98,29 @@ export default function Header({ user, onLogout, onToggleMobileMenu, isMobileMen
 
   const unreadCount = notifications.filter((item) => item.unread).length
 
-  const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((item) => ({ ...item, unread: false })))
+  const handleMarkAllRead = async () => {
+    try {
+      await api.post("/activities/mark-read", {})
+      setNotifications((prev) => prev.map((item) => ({ ...item, unread: false })))
+    } catch (error) {
+      console.error(error)
+    }
   }
 
-  const handleReadSingle = (id) => {
-    setNotifications((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, unread: false } : item)),
-    )
+  const handleReadSingle = async (id) => {
+    try {
+      await api.patch(`/activities/${id}/read`)
+      setNotifications((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, unread: false } : item)),
+      )
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   const handleViewAllNotifications = () => {
     setShowNotificationMenu(false)
-    navigate("/notifications", {
-      state: {
-        notifications,
-      },
-    })
+    navigate("/notifications")
   }
 
   return (
@@ -101,6 +142,7 @@ export default function Header({ user, onLogout, onToggleMobileMenu, isMobileMen
             aria-label="Thong bao"
             aria-expanded={showNotificationMenu}
             onClick={() => {
+              if (notificationsLoading) return
               setShowNotificationMenu(!showNotificationMenu)
               setShowUserMenu(false)
             }}

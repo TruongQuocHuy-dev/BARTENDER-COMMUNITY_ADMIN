@@ -64,6 +64,7 @@ export const api = {
   get: (path, opts = {}) => fetchJson(path, { method: 'GET', ...(opts || {}) }),
   post: (path, body) => fetchJson(path, { method: 'POST', body: body instanceof FormData ? body : JSON.stringify(body) }),
   put: (path, body) => fetchJson(path, { method: 'PUT', body: body instanceof FormData ? body : JSON.stringify(body) }),
+  patch: (path, body) => fetchJson(path, { method: 'PATCH', body: body instanceof FormData ? body : JSON.stringify(body) }),
   del: (path) => fetchJson(path, { method: 'DELETE' }),
 }
 

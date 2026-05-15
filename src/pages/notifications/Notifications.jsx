@@ -1,38 +1,39 @@
-import React, { useMemo, useState } from "react"
-import { useLocation } from "react-router-dom"
+import React, { useEffect, useMemo, useState } from "react"
 import { BellRing, CheckCheck, Search } from "lucide-react"
 import PageHeader from "../../components/PageHeader"
 import FormSearchField from "../../components/common/FormSearchField"
 import FormSelectField from "../../components/common/FormSelectField"
 import EmptyState from "../../components/common/EmptyState"
 import BadgePill from "../../components/common/BadgePill"
+import api from "../../api/client"
 
-const fallbackNotifications = [
-  {
-    id: "n-1",
-    title: "Co report moi can duyet",
-    description: "He thong vua nhan 3 report trong 10 phut qua.",
-    time: "10 phut truoc",
-    unread: true,
-    type: "warning",
-  },
-  {
-    id: "n-2",
-    title: "Premium package duoc nang cap",
-    description: "Nguoi dung da nang cap goi Annual Premium.",
-    time: "35 phut truoc",
-    unread: true,
-    type: "success",
-  },
-  {
-    id: "n-3",
-    title: "Cong thuc moi dang cho phe duyet",
-    description: "Co 8 cong thuc can duoc admin xem xet.",
-    time: "1 gio truoc",
-    unread: false,
+const typeConfig = {
+  new_follower: {
+    title: "Có người theo dõi mới",
     type: "info",
+    tone: "info",
   },
-]
+  new_like: {
+    title: "Nội dung vừa được thích",
+    type: "success",
+    tone: "success",
+  },
+  new_comment: {
+    title: "Có bình luận mới",
+    type: "warning",
+    tone: "warning",
+  },
+  new_recipe: {
+    title: "Có công thức mới",
+    type: "info",
+    tone: "info",
+  },
+  new_post: {
+    title: "Có bài viết mới",
+    type: "info",
+    tone: "info",
+  },
+}
 
 const toneByType = {
   warning: "warning",
@@ -49,14 +50,53 @@ const labelByType = {
 }
 
 export default function Notifications() {
-  const location = useLocation()
-  const incoming = location.state?.notifications
-
-  const [notifications, setNotifications] = useState(
-    Array.isArray(incoming) && incoming.length ? incoming : fallbackNotifications,
-  )
+  const [notifications, setNotifications] = useState([])
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    loadNotifications()
+  }, [])
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true)
+      setError("")
+
+      const response = await api.get("/activities")
+      const items = Array.isArray(response?.activities)
+        ? response.activities
+        : Array.isArray(response)
+          ? response
+          : []
+
+      const mapped = items.map((activity) => {
+        const config = typeConfig[activity.type] || { title: "Thông báo hệ thống", type: "info", tone: "info" }
+        const actorName = activity.actor?.fullName || activity.actor?.username || "Hệ thống"
+        const description = activity.message || `${actorName} đã tạo một thông báo mới.`
+
+        return {
+          id: activity._id,
+          title: config.title,
+          description,
+          time: activity.createdAt ? new Date(activity.createdAt).toLocaleString("vi-VN") : "Vừa xong",
+          unread: !activity.read,
+          type: config.type,
+          tone: config.tone,
+        }
+      })
+
+      setNotifications(mapped)
+    } catch (fetchError) {
+      console.error(fetchError)
+      setError("Không thể tải thông báo từ máy chủ.")
+      setNotifications([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const unreadCount = notifications.filter((item) => item.unread).length
 
@@ -75,14 +115,24 @@ export default function Notifications() {
     })
   }, [notifications, query, statusFilter])
 
-  const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, unread: false } : item)),
-    )
+  const markAsRead = async (id) => {
+    try {
+      await api.patch(`/activities/${id}/read`)
+      setNotifications((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, unread: false } : item)),
+      )
+    } catch (markError) {
+      console.error(markError)
+    }
   }
 
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((item) => ({ ...item, unread: false })))
+  const markAllRead = async () => {
+    try {
+      await api.post("/activities/mark-read", {})
+      setNotifications((prev) => prev.map((item) => ({ ...item, unread: false })))
+    } catch (markError) {
+      console.error(markError)
+    }
   }
 
   return (
@@ -103,6 +153,12 @@ export default function Notifications() {
           </button>
         }
       />
+
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <div className="search-filter-bar notification-toolbar">
         <div style={{ flex: 2, minWidth: 0 }}>
@@ -128,7 +184,11 @@ export default function Notifications() {
       </div>
 
       <section className="notification-list-page">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">
+            Đang tải thông báo...
+          </div>
+        ) : filtered.length === 0 ? (
           <EmptyState message="Khong co thong bao phu hop voi bo loc hien tai." />
         ) : (
           filtered.map((item) => (
