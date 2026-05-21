@@ -15,6 +15,7 @@ import Banners from "./banners/Banners"
 import Posts from "./posts/Posts"
 import Reports from "./reports/Reports"
 import Notifications from "./notifications/Notifications"
+import Audits from "./audits/Audits"
 import PaymentMethods from "./payment-methods/PaymentMethods"
 import Profile from "./profile/Profile"
 import Settings from "./settings/Settings"
@@ -91,6 +92,7 @@ export default function App() {
         <Route path="/posts" element={<ProtectedLayout><Posts /></ProtectedLayout>} />
         <Route path="/reports" element={<ProtectedLayout><Reports /></ProtectedLayout>} />
         <Route path="/reports/:section" element={<ProtectedLayout><Reports /></ProtectedLayout>} />
+        <Route path="/audits" element={<ProtectedLayout><Audits /></ProtectedLayout>} />
         <Route path="/notifications" element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
         <Route path="/payment-methods" element={<ProtectedLayout><PaymentMethods /></ProtectedLayout>} />
         <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
