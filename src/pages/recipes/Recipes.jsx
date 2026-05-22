@@ -6,11 +6,15 @@ import {
     FiClock, FiRefreshCw, FiUpload, FiTrash2
 } from 'react-icons/fi'
 import { UtensilsCrossed } from 'lucide-react'
-import { Utensils, Zap, Star, Video, Image, CalendarDays, UserCircle2, ShieldCheck } from 'lucide-react';
+import { Utensils, Zap, Star, Video, Image, CalendarDays, UserCircle2, ShieldCheck, AlertTriangle, Pin } from 'lucide-react';
 import RecipeForm from './RecipeForm'
 import PageHeader from '../../components/PageHeader'
 import Modal from '../../components/Modal'
 import TableActionMenu from '../../components/TableActionMenu';
+import FormSearchField from '../../components/common/FormSearchField'
+import FormSelectField from '../../components/common/FormSelectField'
+import BadgePill from '../../components/common/BadgePill'
+import EmptyState from '../../components/common/EmptyState'
 
 const normalizeRecipeName = (value = '') =>
     String(value)
@@ -119,11 +123,11 @@ function DetailModal({ item, onClose }) {
 }
 
 const DetailTag = ({ label, value, icon: Icon, color }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 10, borderRadius: 8, background: color ? `${color}10` : '#f3f4f6', border: `1px solid ${color ? color + '30' : '#e5e7eb'}` }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>{label}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: color || '#1f2937', fontSize: 14 }}>
+    <div className="recipe-detail-tag" style={color ? { '--tag-color': color } : undefined}>
+        <span className="recipe-detail-tag-label">{label}</span>
+        <div className="recipe-detail-tag-value">
             {Icon && <Icon size={16} />}
-            <span style={{ textTransform: 'capitalize' }}>{value || 'N/A'}</span>
+            <span>{value || 'N/A'}</span>
         </div>
     </div>
 );
@@ -132,6 +136,7 @@ const DetailTag = ({ label, value, icon: Icon, color }) => (
 export default function Recipes() {
     const [items, setItems] = useState([])
     const [query, setQuery] = useState('')
+    const [debouncedQuery, setDebouncedQuery] = useState('')
     const [detail, setDetail] = useState(null)
     const [editing, setEditing] = useState(false)
     const [categories, setCategories] = useState([])
@@ -150,8 +155,14 @@ export default function Recipes() {
     const [importPreview, setImportPreview] = useState(null)
     const [isImporting, setIsImporting] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
+    const [failedImages, setFailedImages] = useState({})
     const fileInputRef = useRef(null)
     const ITEMS_PER_PAGE = 10;
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedQuery(query), 350)
+        return () => clearTimeout(timer)
+    }, [query])
 
     // Load data
     const load = useCallback(async () => {
@@ -247,7 +258,7 @@ export default function Recipes() {
     const filtered = useMemo(() => {
         return items.filter(r => {
             // 1. Tìm kiếm theo tên
-            const matchesQuery = (r.name || '').toLowerCase().includes(query.toLowerCase())
+            const matchesQuery = (r.name || '').toLowerCase().includes(debouncedQuery.toLowerCase())
 
             // 2. Lọc theo Trạng thái
             const matchesStatus = !statusFilter
@@ -265,10 +276,10 @@ export default function Recipes() {
 
             return matchesQuery && matchesStatus && matchesCategory && matchesType;
         })
-    }, [items, query, statusFilter, selectedCategory, typeFilter]);
+    }, [items, debouncedQuery, statusFilter, selectedCategory, typeFilter]);
 
     // Reset trang khi filter thay đổi
-    useEffect(() => { setCurrentPage(1); }, [query, selectedCategory, statusFilter, typeFilter]);
+    useEffect(() => { setCurrentPage(1); }, [debouncedQuery, selectedCategory, statusFilter, typeFilter]);
 
     // Pagination
     const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
@@ -282,6 +293,8 @@ export default function Recipes() {
     };
 
     const pendingCount = items.filter(r => r.status === 'pending' || !r.status).length;
+    const approvedCount = items.filter(r => r.status === 'approved').length;
+    const premiumCount = items.filter(r => r.isPremium === true).length;
 
     const currentPageIds = useMemo(() => paginatedItems.map(r => r._id), [paginatedItems]);
 
@@ -684,36 +697,63 @@ export default function Recipes() {
     };
 
     return (
-        <div className="admin-page">
+        <div className="admin-page recipes-page">
             <PageHeader
-                title="QUẢN LÝ CÔNG THỨC"
+                title="Quản lý công thức"
                 subtitle={`Hiển thị ${paginatedItems.length} / ${filtered.length} công thức`}
                 actions={(
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <div className="recipes-header-actions">
                         <button
+                            type="button"
                             onClick={handleBulkDelete}
                             className="button-danger"
                             disabled={(isBulkDeleting || isDeleting) || selectedCount === 0}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                         >
                             <FiTrash2 size={16} /> {(isBulkDeleting || isDeleting) ? 'Đang xóa...' : `Xóa đã chọn (${selectedCount})`}
                         </button>
                         <button
+                            type="button"
                             onClick={() => fileInputRef.current?.click()}
                             className="button-secondary"
                             disabled={isImporting}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                             title="Import nhanh từ file JSON/CSV"
                         >
                             <FiUpload size={16} /> {isImporting ? 'Đang import...' : 'Import File'}
                         </button>
-                        <button onClick={() => setEditing(true)} className="button-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <button type="button" onClick={() => setEditing(true)} className="button-primary">
                             <FiPlus size={16} /> Thêm Mới
                         </button>
                     </div>
                 )}
                 icon={<UtensilsCrossed size={26} />}
             />
+
+            <div className="recipes-insights-grid three-col">
+                <div className="recipes-summary-card tone-blue">
+                    <div className="summary-card-head">
+                        <span className="summary-card-icon"><Utensils size={14} /></span>
+                        <span>Tổng công thức</span>
+                    </div>
+                    <h3>{items.length}</h3>
+                    <p>Tất cả công thức trong hệ thống</p>
+                </div>
+                <div className="recipes-summary-card tone-amber">
+                    <div className="summary-card-head">
+                        <span className="summary-card-icon"><FiClock size={14} /></span>
+                        <span>Đang chờ duyệt</span>
+                    </div>
+                    <h3>{pendingCount}</h3>
+                    <p>Sẵn sàng xử lý moderation</p>
+                </div>
+                <div className="recipes-summary-card tone-green">
+                    <div className="summary-card-head">
+                        <span className="summary-card-icon"><Zap size={14} /></span>
+                        <span>Premium / Approved</span>
+                    </div>
+                    <h3>{premiumCount} / {approvedCount}</h3>
+                    <p>Công thức cao cấp và đã duyệt</p>
+                </div>
+            </div>
 
             <input
                 ref={fileInputRef}
@@ -723,120 +763,77 @@ export default function Recipes() {
                 onChange={handleImportFile}
             />
 
-            {/* --- THANH TÌM KIẾM & BỘ LỌC --- */}
-            <div className="search-filter-bar bg-white p-4 rounded-lg shadow-md mb-6"
-                style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', border: '1px solid #e5e7eb' }}>
-
-                {/* 1. Tìm kiếm */}
-                <div style={{ position: 'relative', flex: '2 1 250px' }}>
-                    <FiSearch
-                        size={18}
-                        style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', zIndex: 10 }}
-                    />
-                    <input
-                        placeholder="Tìm kiếm tên công thức..."
+            <div className="search-filter-bar recipes-filter-bar">
+                <div className="recipes-filter-main">
+                    <FormSearchField
                         value={query}
-                        onChange={e => setQuery(e.target.value)}
-                        className="input-field"
-                        style={{
-                            paddingLeft: 40,
-                            width: '100%',
-                            height: 42,
-                            borderRadius: 8,
-                            boxSizing: 'border-box'
-                        }}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Tìm kiếm tên công thức..."
+                        icon={FiSearch}
+                    />
+
+                    <FormSelectField
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        options={[
+                            { value: '', label: 'Tất cả Danh mục' },
+                            ...categories.map((cat) => ({ value: cat.name, label: cat.name })),
+                        ]}
+                    />
+
+                    <FormSelectField
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        options={[
+                            { value: '', label: 'Tất cả Trạng thái' },
+                            { value: 'pending', label: 'Chờ duyệt' },
+                            { value: 'approved', label: 'Đã duyệt' },
+                            { value: 'rejected', label: 'Bị từ chối' },
+                        ]}
+                    />
+
+                    <FormSelectField
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value)}
+                        options={[
+                            { value: 'all', label: 'Tất cả Loại' },
+                            { value: 'free', label: 'Miễn phí' },
+                            { value: 'premium', label: 'Cao cấp' },
+                        ]}
                     />
                 </div>
 
-                {/* 2. Các Dropdown Bộ lọc */}
-                <div style={{ display: 'flex', gap: 12, flex: '4 1 500px', flexWrap: 'wrap' }}>
-                    {/* Lọc Danh mục */}
-                    <select
-                        value={selectedCategory}
-                        onChange={e => setSelectedCategory(e.target.value)}
-                        className="input-field"
-                        style={{ minWidth: 160, flex: 1, height: 42, borderRadius: 8, cursor: 'pointer' }}
-                    >
-                        <option value="">Tất cả Danh mục</option>
-                        {categories.map(cat => (
-                            <option key={cat._id} value={cat.name}>{cat.name}</option>
-                        ))}
-                    </select>
-
-                    {/* Lọc Trạng thái */}
-                    <select
-                        value={statusFilter}
-                        onChange={e => setStatusFilter(e.target.value)}
-                        className="input-field"
-                        style={{ minWidth: 160, flex: 1, height: 42, borderRadius: 8, cursor: 'pointer' }}
-                    >
-                        <option value="">Tất cả Trạng thái</option>
-                        <option value="pending">Chờ duyệt</option>
-                        <option value="approved">Đã duyệt</option>
-                        <option value="rejected">Bị từ chối</option>
-                    </select>
-
-                    {/* Lọc Loại (MỚI) */}
-                    <select
-                        value={typeFilter}
-                        onChange={e => setTypeFilter(e.target.value)}
-                        className="input-field"
-                        style={{ minWidth: 140, flex: 1, height: 42, borderRadius: 8, cursor: 'pointer' }}
-                    >
-                        <option value="all">Tất cả Loại</option>
-                        <option value="free">Miễn phí</option>
-                        <option value="premium">Cao cấp</option>
-                    </select>
-                </div>
-
-                {/* 3. Nút Hành động */}
-                <div style={{ display: 'flex', gap: 8, flex: '1 1 auto', justifyContent: 'flex-end' }}>
-                    {/* Nút Reset Filter */}
+                <div className="recipes-filter-actions">
                     {(query || selectedCategory || statusFilter || typeFilter !== 'all') && (
-                        <button
-                            onClick={clearFilters}
-                            title="Xóa bộ lọc"
-                            style={{
-                                height: 42, width: 42, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', color: '#6b7280', cursor: 'pointer'
-                            }}
-                        >
-                            <FiRefreshCw />
+                        <button type="button" className="recipes-icon-btn" onClick={clearFilters} title="Xóa bộ lọc">
+                            <FiRefreshCw size={16} />
                         </button>
                     )}
 
                     <button
+                        type="button"
                         onClick={handleBulkApprove}
-                        className="button-primary"
+                        className="button-primary recipes-quick-approve-btn"
                         disabled={isBulkApproving || loading || pendingCount === 0}
-                        style={{
-                            height: 42,
-                            padding: '0 16px',
-                            backgroundColor: (pendingCount > 0 && !isBulkApproving) ? '#22c55e' : undefined,
-                            whiteSpace: 'nowrap'
-                        }}
                     >
-                        {isBulkApproving ? 'Đang xử lý...' : `Duyệt Nhanh (${pendingCount})`}
+                        {isBulkApproving ? 'Đang xử lý...' : `Duyệt nhanh (${pendingCount})`}
                     </button>
                 </div>
             </div>
 
             {/* Table Section */}
-            <div className="table-section bg-white p-0 rounded-lg shadow-md overflow-hidden border border-gray-100">
+            <div className="table-section recipes-table-section">
                 {loading ? (
-                    <div className="text-center py-10 text-gray-500">Đang tải dữ liệu...</div>
+                    <div className="recipes-table-loading">Đang tải dữ liệu...</div>
                 ) : paginatedItems.length === 0 ? (
-                    <div className="empty-state text-center py-16 text-gray-400">
-                        <div style={{ fontSize: 40, marginBottom: 10 }}>🍳</div>
-                        <p>Không tìm thấy công thức nào phù hợp.</p>
-                    </div>
+                    <EmptyState icon="🍳" message="Không tìm thấy công thức nào phù hợp." />
                 ) : (
                     <>
                         <div className="overflow-x-auto recipes-table-wrap">
                             <table className="table recipes-table">
-                                <thead style={{ background: '#f9fafb' }}>
+                                <thead>
                                     <tr>
-                                        <th style={{ ...tableHeaderStyle, width: 46, textAlign: 'center' }}>
+                                        <th className="recipes-checkbox-col">
                                             <input
                                                 type="checkbox"
                                                 checked={allCurrentPageSelected}
@@ -845,19 +842,20 @@ export default function Recipes() {
                                                 aria-label="Chọn tất cả công thức trong trang"
                                             />
                                         </th>
-                                        <th style={tableHeaderStyle}>Hình ảnh</th>
-                                        <th style={tableHeaderStyle}>Tên công thức</th>
-                                        <th style={tableHeaderStyle}>Danh mục</th>
-                                        <th style={tableHeaderStyle}>Tác giả</th>
-                                        <th style={tableHeaderStyle}>Trạng thái</th>
-                                        <th style={tableHeaderStyle}>Loại</th>
-                                        <th style={tableHeaderStyle}></th>
+                                        <th>Hình ảnh</th>
+                                        <th>Tên công thức</th>
+                                        <th>Danh mục</th>
+                                        <th>Tác giả</th>
+                                        <th>Trạng thái</th>
+                                        <th>Loại</th>
+                                        <th>Moderation</th>
+                                        <th className="actions-column"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {paginatedItems.map(r => (
-                                        <tr key={r._id} style={{ borderBottom: '1px solid #f3f4f6' }} className="hover:bg-gray-50">
-                                            <td style={{ ...tableCellStyle, textAlign: 'center' }}>
+                                        <tr key={r._id}>
+                                            <td className="recipes-checkbox-col">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedIds.includes(r._id)}
@@ -867,50 +865,71 @@ export default function Recipes() {
                                                     aria-label={`Chọn công thức ${r.name}`}
                                                 />
                                             </td>
-                                            <td style={tableCellStyle}>
-                                                {r.imageUrl ? (
-                                                    <img src={r.imageUrl} alt={r.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, border: '1px solid #eee' }} />
-                                                ) : <div style={{ width: 48, height: 48, background: '#f3f4f6', borderRadius: 6 }} />}
+                                            <td>
+                                                {r.imageUrl && !failedImages[r._id] ? (
+                                                    <img
+                                                        src={r.imageUrl}
+                                                        alt={r.name}
+                                                        className="recipe-thumb"
+                                                        loading="lazy"
+                                                        onError={() => setFailedImages((prev) => ({ ...prev, [r._id]: true }))}
+                                                    />
+                                                ) : (
+                                                    <div className="recipe-thumb recipe-thumb-fallback">
+                                                        <Image size={16} />
+                                                    </div>
+                                                )}
                                             </td>
-                                            <td style={{ ...tableCellStyle, fontWeight: 500, color: '#111827' }}>{r.name}</td>
-                                            <td style={tableCellStyle}>
-                                                <span style={{ padding: '2px 8px', background: '#f3f4f6', borderRadius: 12, fontSize: 12 }}>{r.category}</span>
+                                            <td className="recipe-name-cell">{r.name}</td>
+                                            <td>
+                                                <span className="recipe-chip" title={r.category}>{r.category}</span>
                                             </td>
-                                            <td style={{ ...tableCellStyle, color: '#4b5563' }}>{r.author?.fullName || r.author?.displayName || 'Ẩn danh'}</td>
+                                            <td className="recipe-author-cell">{r.author?.fullName || r.author?.displayName || 'Ẩn danh'}</td>
 
-                                            <td style={tableCellStyle}>
-                                                <span className={`status-badge status-${r.status}`} style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', backgroundColor: `${getStatusColor(r.status)}15`, color: getStatusColor(r.status), border: `1px solid ${getStatusColor(r.status)}30`, whiteSpace: 'nowrap', display: 'inline-block' }}>
-                                                    {r.status === 'approved' ? 'Đã duyệt' : r.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
-                                                </span>
+                                            <td>
+                                                <BadgePill
+                                                    label={r.status === 'approved' ? 'Đã duyệt' : r.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
+                                                    tone={r.status === 'approved' ? 'success' : r.status === 'rejected' ? 'danger' : 'warning'}
+                                                />
                                             </td>
 
-                                            <td style={tableCellStyle}>
+                                            <td>
                                                 {r.isPremium ?
-                                                    <span style={{ color: '#b45309', background: '#fffbeb', padding: '2px 6px', borderRadius: 4, border: '1px solid #fcd34d', fontSize: 11, fontWeight: 600 }}>CAO CẤP</span>
-                                                    : <span style={{ color: '#374151', fontSize: 12 }}>Miễn phí</span>
+                                                    <span className="recipe-tier-premium">CAO CẤP</span>
+                                                    : <span className="recipe-tier-free">Miễn phí</span>
                                                 }
                                             </td>
 
-                                            <td className="actions-cell recipe-actions-cell" style={{ ...tableCellStyle, textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                                    <TableActionMenu
-                                                        onView={() => setDetail(r)}
-                                                        onEdit={() => setEditing(r)}
-                                                        onDelete={() => requestDeleteRecipe(r)}
-                                                        customActions={r.status === 'pending' ? [
-                                                            {
-                                                                label: 'Duyệt',
-                                                                icon: <FiCheck size={16} color="#22c55e" />,
-                                                                onClick: () => handleApprove(r._id)
-                                                            },
-                                                            {
-                                                                label: 'Từ chối',
-                                                                icon: <FiX size={16} color="#f97316" />,
-                                                                onClick: () => handleReject(r._id)
-                                                            }
-                                                        ] : []}
-                                                    />
+                                            <td>
+                                                <div className="recipe-moderation-flags">
+                                                    {(r.reportCount > 0 || r.isReported) ? (
+                                                        <span className="recipe-flag reported"><AlertTriangle size={12} /> Reported</span>
+                                                    ) : null}
+                                                    {r.isPinned ? (
+                                                        <span className="recipe-flag pinned"><Pin size={12} /> Pinned</span>
+                                                    ) : null}
+                                                    {!(r.reportCount > 0 || r.isReported || r.isPinned) ? <span className="recipe-flag none">-</span> : null}
                                                 </div>
+                                            </td>
+
+                                            <td className="actions-cell recipe-actions-cell">
+                                                <TableActionMenu
+                                                    onView={() => setDetail(r)}
+                                                    onEdit={() => setEditing(r)}
+                                                    onDelete={() => requestDeleteRecipe(r)}
+                                                    customActions={r.status === 'pending' ? [
+                                                        {
+                                                            label: 'Duyệt',
+                                                            icon: <FiCheck size={16} color="#22c55e" />,
+                                                            onClick: () => handleApprove(r._id)
+                                                        },
+                                                        {
+                                                            label: 'Từ chối',
+                                                            icon: <FiX size={16} color="#f97316" />,
+                                                            onClick: () => handleReject(r._id)
+                                                        }
+                                                    ] : []}
+                                                />
                                             </td>
                                         </tr>
                                     ))}
@@ -920,11 +939,30 @@ export default function Recipes() {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid #e5e7eb', background: '#fff' }}>
-                                <span style={{ fontSize: 13, color: '#6b7280' }}>Trang <strong>{currentPage}</strong> / {totalPages}</span>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    <button className="button-secondary" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', fontSize: 13 }}><FiChevronLeft size={14} /> Trước</button>
-                                    <button className="button-secondary" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', fontSize: 13 }}>Sau <FiChevronRight size={14} /></button>
+                            <div className="recipes-pagination-footer">
+                                <span className="recipes-pagination-meta">Trang <strong>{currentPage}</strong> / {totalPages}</span>
+                                <div className="recipes-pagination-controls">
+                                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}><FiChevronLeft size={14} /> Trước</button>
+                                    <div className="pagination-buttons">
+                                        {(() => {
+                                            const pages = []
+                                            const start = Math.max(1, currentPage - 2)
+                                            const end = Math.min(totalPages, currentPage + 2)
+                                            for (let i = start; i <= end; i += 1) {
+                                                pages.push(
+                                                    <button key={i} type="button" className={`page-btn ${currentPage === i ? 'active' : ''}`} onClick={() => handlePageChange(i)}>{i}</button>
+                                                )
+                                            }
+                                            if (end < totalPages) {
+                                                pages.push(<span key="ellipsis-end">…</span>)
+                                                pages.push(
+                                                    <button key={totalPages} type="button" className={`page-btn ${currentPage === totalPages ? 'active' : ''}`} onClick={() => handlePageChange(totalPages)}>{totalPages}</button>
+                                                )
+                                            }
+                                            return pages
+                                        })()}
+                                    </div>
+                                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Sau <FiChevronRight size={14} /></button>
                                 </div>
                             </div>
                         )}
@@ -1044,7 +1082,3 @@ function getStatusColor(status) {
         default: return '#6b7280';
     }
 }
-
-const tableHeaderStyle = { padding: '12px 16px', textAlign: 'left', color: '#6b7280', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' };
-const tableCellStyle = { padding: '12px 16px', fontSize: 14, verticalAlign: 'middle', borderBottom: '1px solid #f3f4f6' };
-const actionButtonStyle = (color) => ({ background: `${color}1A`, color: color, border: 'none', borderRadius: '6px', padding: '6px', cursor: 'pointer', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' });

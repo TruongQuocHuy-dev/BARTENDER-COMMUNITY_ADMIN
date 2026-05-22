@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react"
 import api from "../../api/client"
 // Thay thế FiCrown bằng FaCrown (từ Font Awesome) và thêm FaCrown vào import list
-import { FiFilter, FiX, FiCheckCircle, FiLock, FiUser, FiTrash2 } from 'react-icons/fi'
+import { FiFilter, FiX, FiCheckCircle, FiLock, FiUser, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 import { FaCrown } from 'react-icons/fa';
 
 import FilterChip from '../../components/filters/FilterChip'
@@ -408,6 +408,9 @@ export default function Users() {
   const [viewing, setViewing] = useState(null)
   const [activeFilters, setActiveFilters] = useState([])
   const [showFilterModal, setShowFilterModal] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const ITEMS_PER_PAGE = 10
 
   useEffect(() => {
     load()
@@ -455,6 +458,25 @@ export default function Users() {
     })
   }, [users, query, activeFilters])
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [query, activeFilters])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return filtered.slice(start, start + ITEMS_PER_PAGE)
+  }, [filtered, currentPage])
+
+  const premiumCount = useMemo(
+    () => users.filter((u) => (u.subscription?.tier || 'free') === 'premium').length,
+    [users]
+  )
+  const bannedCount = useMemo(
+    () => users.filter((u) => u.isBanned === true).length,
+    [users]
+  )
+
   const handleApplyFilter = (newFilter) => {
     // Kiểm tra xem bộ lọc đã tồn tại chưa (để tránh trùng lặp)
     const exists = activeFilters.some(f => f.type === newFilter.type && f.value === newFilter.value);
@@ -467,20 +489,54 @@ export default function Users() {
     setActiveFilters(activeFilters.filter(f => f !== filterToRemove));
   };
 
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return
+    setCurrentPage(page)
+  }
+
   return (
-    <div className="admin-page">
+    <div className="admin-page users-page">
       <PageHeader
-        title="QUẢN LÝ NGƯỜI DÙNG"
+        title="Quản lý người dùng"
         subtitle={`Tìm thấy ${filtered.length} trên tổng số ${users.length} người dùng`}
         icon={<UsersIcon size={26} />}
         actions={(
-          <button className="button-danger" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button type="button" className="button-danger users-bulk-delete-btn" disabled>
             <FiTrash2 size={16} /> <span>Xóa hàng loạt</span>
           </button>
         )} />
 
+      <div className="users-insights-grid three-col">
+        <div className="users-summary-card tone-blue">
+          <div className="summary-card-head">
+            <span className="summary-card-icon"><UsersIcon size={14} /></span>
+            <span>Tổng người dùng</span>
+          </div>
+          <h3>{users.length}</h3>
+          <p>Tổng số tài khoản người dùng thường</p>
+        </div>
+
+        <div className="users-summary-card tone-amber">
+          <div className="summary-card-head">
+            <span className="summary-card-icon"><Crown size={14} /></span>
+            <span>Tài khoản premium</span>
+          </div>
+          <h3>{premiumCount}</h3>
+          <p>Số người dùng đang dùng gói cao cấp</p>
+        </div>
+
+        <div className="users-summary-card tone-red">
+          <div className="summary-card-head">
+            <span className="summary-card-icon"><ShieldX size={14} /></span>
+            <span>Tài khoản bị khóa</span>
+          </div>
+          <h3>{bannedCount}</h3>
+          <p>Số tài khoản đang bị khóa truy cập</p>
+        </div>
+      </div>
+
       {/* --- Search & Filter Bar --- */}
-      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-md mb-4" style={{ display: 'flex', gap: 10 }}>
+      <div className="search-filter-bar users-search-bar">
 
         {/* Search Input */}
         <div style={{ flexGrow: 1 }}>
@@ -494,9 +550,9 @@ export default function Users() {
 
         {/* Add Filter Button */}
         <button
+          type="button"
           className="button-secondary"
           onClick={() => setShowFilterModal(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 15px' }}
         >
           <FiFilter size={16} />
           Thêm Bộ lọc
@@ -504,7 +560,7 @@ export default function Users() {
       </div>
 
       {/* --- Active Filters --- */}
-      <div className="active-filters-container mb-4 flex flex-wrap gap-2">
+      <div className="active-filters-container">
         {activeFilters.map((filter, index) => (
           <FilterChip
             key={index}
@@ -515,60 +571,60 @@ export default function Users() {
         ))}
         {activeFilters.length > 0 && (
           <button
+            type="button"
             onClick={() => setActiveFilters([])}
-            className="text-sm font-medium"
-            style={{ padding: '4px 10px', color: '#ef4444', border: '1px solid #ef444460', borderRadius: '15px', background: '#fee2e2' }}
+            className="users-clear-filters-btn"
           >
-            <FiX size={14} style={{ display: 'inline', marginRight: 4 }} />
+            <FiX size={14} />
             Xóa Tất cả
           </button>
         )}
       </div>
 
       {/* --- Users Table --- */}
-      <div className="table-section users-table-wrap bg-white p-4 rounded-lg shadow-md overflow-x-auto">
+      <div className="table-section users-table-wrap">
         {filtered.length === 0 ? (
           <EmptyState icon="🕵️" message="Không tìm thấy người dùng nào khớp với tiêu chí tìm kiếm và bộ lọc." />
         ) : (
           <table className="table users-table">
             <thead>
-              <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                <th style={tableHeaderStyle}>Tên đầy đủ</th>
-                <th style={tableHeaderStyle}>Email</th>
-                <th style={tableHeaderStyle}>Gói DV</th>
-                <th style={tableHeaderStyle}>Trạng thái</th>
-                <th style={tableHeaderStyle}>Xác thực</th>
-                <th style={tableHeaderStyle}></th>
+              <tr>
+                <th>Tên đầy đủ</th>
+                <th>Email</th>
+                <th>Gói DV</th>
+                <th>Trạng thái</th>
+                <th>Xác thực</th>
+                <th className="actions-column"></th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((u) => (
-                <tr key={u._id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={tableCellStyle} className="font-medium user-name-cell" title={u.fullName || 'N/A'}>
+              {paginatedUsers.map((u) => (
+                <tr key={u._id}>
+                  <td className="user-name-cell" title={u.fullName || 'N/A'}>
                     <span className="cell-truncate">{truncateText(u.fullName || 'N/A', 16)}</span>
                   </td>
-                  <td style={tableCellStyle} className="text-gray-600 user-email-cell" title={u.email || 'N/A'}>
+                  <td className="user-email-cell" title={u.email || 'N/A'}>
                     <span className="cell-truncate">{truncateText(u.email || 'N/A', 24)}</span>
                   </td>
-                  <td style={tableCellStyle}>
+                  <td>
                     <span className={`subscription-tag subscription-${u.subscription?.tier || 'free'}`}>
                       {u.subscription?.tier === 'premium'
                         ? `Cao cấp ${u.subscription.planId?.includes('yearly') ? '(Năm)' : u.subscription.planId?.includes('monthly') ? '(Tháng)' : ''}`
                         : 'Miễn phí'}
                     </span>
                     {u.subscription?.endDate && (
-                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: 4 }}>
+                      <div className="subscription-expiry">
                         Hết hạn: {new Date(u.subscription.endDate).toLocaleDateString('vi-VN')}
                       </div>
                     )}
                   </td>
-                  <td style={tableCellStyle}>
+                  <td>
                     <StatusBadge user={u} />
                   </td>
-                  <td style={tableCellStyle}>
+                  <td>
                     <BadgePill label={u.isVerified ? 'Đã xác thực' : 'Chưa xác thực'} tone={u.isVerified ? 'success' : 'danger'} />
                   </td>
-                  <td className="actions-cell" style={{ ...tableCellStyle, textAlign: 'center' }}>
+                  <td className="actions-cell">
                     <TableActionMenu
                       onView={() => setViewing(u)}
                       onEdit={() => setEditing(u)}
@@ -579,6 +635,63 @@ export default function Users() {
               ))}
             </tbody>
           </table>
+        )}
+
+        {filtered.length > 0 && (
+          <div className="users-pagination-footer">
+            <div className="users-pagination-meta">
+              Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} / {filtered.length}
+            </div>
+
+            <div className="users-pagination-controls">
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
+                <FiChevronLeft size={14} />
+                Trước
+              </button>
+
+              <div className="pagination-buttons">
+                {(() => {
+                  const pages = []
+                  const start = Math.max(1, currentPage - 2)
+                  const end = Math.min(totalPages, currentPage + 2)
+
+                  for (let i = start; i <= end; i += 1) {
+                    pages.push(
+                      <button
+                        key={i}
+                        type="button"
+                        className={`page-btn ${currentPage === i ? 'active' : ''}`}
+                        onClick={() => goToPage(i)}
+                      >
+                        {i}
+                      </button>
+                    )
+                  }
+
+                  if (end < totalPages) {
+                    pages.push(<span key="ellipsis-end">…</span>)
+                    pages.push(
+                      <button
+                        key={totalPages}
+                        type="button"
+                        className={`page-btn ${currentPage === totalPages ? 'active' : ''}`}
+                        onClick={() => goToPage(totalPages)}
+                      >
+                        {totalPages}
+                      </button>
+                    )
+                  }
+
+                  return pages
+                })()}
+              </div>
+
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
+                Sau
+                <FiChevronRight size={14} />
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
@@ -592,19 +705,3 @@ export default function Users() {
     </div>
   )
 }
-
-// Inline Styles for Table
-const tableHeaderStyle = {
-  padding: '14px 16px',
-  textAlign: 'left',
-  color: '#6b7280',
-  fontWeight: 600,
-  fontSize: 12,
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em' // Giãn chữ nhẹ cho sang
-};
-const tableCellStyle = {
-  padding: '14px 16px',
-  borderBottom: '1px solid #f3f4f6',
-  verticalAlign: 'middle' // Căn giữa theo chiều dọc
-};
