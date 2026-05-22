@@ -89,6 +89,125 @@
   margin-bottom: 16px;
 }
 
+/* Audit page: reuse report styles but scoped for audit page classes */
+.audit-insights-grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.audit-insights-grid.three-col {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.audit-summary-card {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--shadow-card);
+  padding: 14px;
+}
+
+.audit-summary-card .summary-card-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.audit-summary-card .summary-card-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(99, 102, 241, 0.12);
+  color: #4f46e5;
+}
+
+.audit-summary-card h3 {
+  margin: 10px 0 4px;
+  font-size: 26px;
+  color: var(--text-primary);
+}
+
+.audit-toolbar-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.audit-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-light);
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96));
+}
+
+.audit-pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Pagination buttons */
+.pagination-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-white);
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 36px;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.page-btn.active {
+  background: var(--primary-gradient);
+  color: white;
+  border-color: transparent;
+  box-shadow: var(--shadow-primary);
+}
+
+.page-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Date input: normalize browser focus outline and sizing */
+input[type="date"].common-input,
+input[type="date"] {
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-white);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+input[type="date"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
+  border-color: var(--primary-color);
+}
+
 .report-insights-grid.three-col {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

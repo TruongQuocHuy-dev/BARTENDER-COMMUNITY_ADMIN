@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function FormSearchField({ value, onChange, placeholder, icon: Icon }) {
+export default function FormSearchField({ value, onChange, placeholder, icon: Icon, ...props }) {
   return (
     <div className="common-field-wrap">
       {Icon ? <Icon size={18} className="common-field-icon" /> : null}
@@ -9,6 +9,7 @@ export default function FormSearchField({ value, onChange, placeholder, icon: Ic
         onChange={onChange}
         placeholder={placeholder}
         className="input-field common-input"
+        {...props}
       />
     </div>
   )
