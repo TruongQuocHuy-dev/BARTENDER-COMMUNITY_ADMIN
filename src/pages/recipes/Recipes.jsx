@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import api from '../../api/client'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
     FiPlus, FiSearch,
     FiCheck, FiX, FiChevronLeft, FiChevronRight,
@@ -134,6 +135,8 @@ const DetailTag = ({ label, value, icon: Icon, color }) => (
 
 // --- MAIN COMPONENT ---
 export default function Recipes() {
+    const location = useLocation()
+    const navigate = useNavigate()
     const [items, setItems] = useState([])
     const [query, setQuery] = useState('')
     const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -181,6 +184,12 @@ export default function Recipes() {
 
     useEffect(() => { loadCategories() }, []);
     useEffect(() => { load() }, [load]);
+    useEffect(() => {
+        if (location.state?.openCreate) {
+            setEditing(true)
+            navigate(location.pathname, { replace: true, state: {} })
+        }
+    }, [location.pathname, location.state, navigate])
 
     const loadCategories = async () => {
         try { const data = await api.get('/categories'); setCategories(data); } catch (e) { console.error(e) }
