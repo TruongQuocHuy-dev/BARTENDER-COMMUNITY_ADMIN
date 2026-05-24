@@ -11,6 +11,7 @@ const tabs = [
   { key: 'profile', label: 'Profile', icon: UserCircle },
   { key: 'security', label: 'Security', icon: Shield },
   { key: 'notifications', label: 'Notifications', icon: Bell },
+  { key: 'system', label: 'System', icon: SettingsIcon },
 ]
 
 const initialSecurityAlerts = {
@@ -62,6 +63,10 @@ export default function Settings() {
     newPassword: '',
     confirmPassword: '',
   })
+
+  const [systemSettings, setSystemSettings] = useState([])
+  const [newSettingKey, setNewSettingKey] = useState('')
+  const [newSettingValue, setNewSettingValue] = useState('')
 
   const [twoFaCode, setTwoFaCode] = useState('')
   const [twoFaSecret, setTwoFaSecret] = useState('')
@@ -120,6 +125,15 @@ export default function Settings() {
       })
 
       setDevices(Array.isArray(devicesRes) ? devicesRes : [])
+      // load system settings only for admin users
+      if (user?.role === 'admin') {
+        try {
+          const systemRes = await settingsApi.getSystemSettings()
+          setSystemSettings(Array.isArray(systemRes) ? systemRes : [])
+        } catch (e) {
+          console.warn('Failed loading system settings:', e)
+        }
+      }
     } catch (err) {
       setNotice('', err?.message || 'Unable to load settings.')
     } finally {
@@ -314,6 +328,71 @@ export default function Settings() {
       setNotice('Logged out all other devices.')
     } catch (err) {
       setNotice('', err?.message || 'Failed to logout all devices.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // System settings handlers (admin)
+  const handleToggleMaintenance = async (checked) => {
+    setBusy(true)
+    setNotice('')
+    try {
+      await settingsApi.upsertSystemSetting('maintenance_mode', !!checked)
+      const systemRes = await settingsApi.getSystemSettings()
+      setSystemSettings(Array.isArray(systemRes) ? systemRes : [])
+      setNotice('Updated maintenance mode')
+    } catch (e) {
+      setNotice('', e?.message || 'Failed to update maintenance mode')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleSaveSetting = async (key, value) => {
+    setBusy(true)
+    setNotice('')
+    try {
+      await settingsApi.upsertSystemSetting(key, value)
+      const systemRes = await settingsApi.getSystemSettings()
+      setSystemSettings(Array.isArray(systemRes) ? systemRes : [])
+      setNotice('Saved setting')
+    } catch (e) {
+      setNotice('', e?.message || 'Failed to save setting')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleCreateSetting = async () => {
+    if (!newSettingKey) return setNotice('', 'Key is required')
+    setBusy(true)
+    setNotice('')
+    try {
+      await settingsApi.createSystemSetting({ key: newSettingKey, value: newSettingValue })
+      const systemRes = await settingsApi.getSystemSettings()
+      setSystemSettings(Array.isArray(systemRes) ? systemRes : [])
+      setNewSettingKey('')
+      setNewSettingValue('')
+      setNotice('Created setting')
+    } catch (e) {
+      setNotice('', e?.message || 'Failed to create setting')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleDeleteSetting = async (key) => {
+    if (!confirm(`Delete setting ${key}?`)) return
+    setBusy(true)
+    setNotice('')
+    try {
+      await settingsApi.deleteSystemSetting(key)
+      const systemRes = await settingsApi.getSystemSettings()
+      setSystemSettings(Array.isArray(systemRes) ? systemRes : [])
+      setNotice('Deleted setting')
+    } catch (e) {
+      setNotice('', e?.message || 'Failed to delete setting')
     } finally {
       setBusy(false)
     }
@@ -687,6 +766,62 @@ export default function Settings() {
     </SettingSection>
   )
 
+  const renderSystemTab = () => (
+    <SettingSection
+      title="System settings"
+      description="Manage key-value system settings and maintenance mode."
+    >
+      <div style={{ marginBottom: 12 }}>
+        <label>Maintenance mode</label>
+        <div>
+          <ToggleSwitch id="maintenance_mode" label="Maintenance mode" checked={!!systemSettings.find(s => s.key === 'maintenance_mode')?.value} onChange={(e) => handleToggleMaintenance(e.target.checked)} />
+        </div>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <label>Existing settings</label>
+        <div className="settings-grid">
+          {systemSettings.map((s) => (
+            <div key={s.key} style={{ border: '1px solid #eee', padding: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong>{s.key}</strong>
+                <div>
+                  <button className="btn" onClick={() => handleSaveSetting(s.key, s.value)} disabled={busy}>Save</button>
+                  <button className="btn btn-danger" onClick={() => handleDeleteSetting(s.key)} disabled={busy}>Delete</button>
+                </div>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <textarea value={typeof s.value === 'object' ? JSON.stringify(s.value, null, 2) : String(s.value ?? '')} onChange={(e) => {
+                  try {
+                    const parsed = JSON.parse(e.target.value)
+                    setSystemSettings(prev => prev.map(p => p.key === s.key ? { ...p, value: parsed } : p))
+                  } catch (err) {
+                    setSystemSettings(prev => prev.map(p => p.key === s.key ? { ...p, value: e.target.value } : p))
+                  }
+                }} rows={4} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <label>Create new setting</label>
+        <div className="settings-grid settings-grid-two">
+          <div>
+            <input placeholder="Key" value={newSettingKey} onChange={(e) => setNewSettingKey(e.target.value)} />
+          </div>
+          <div>
+            <input placeholder="Value (string or JSON)" value={newSettingValue} onChange={(e) => setNewSettingValue(e.target.value)} />
+          </div>
+        </div>
+        <div style={{ marginTop: 8 }}>
+          <button className="btn btn-primary" onClick={handleCreateSetting} disabled={busy}>Create</button>
+        </div>
+      </div>
+    </SettingSection>
+  )
+
   return (
     <div className="admin-page settings-page">
       <PageHeader
@@ -722,6 +857,7 @@ export default function Settings() {
         {activeTab === 'profile' ? renderProfileTab() : null}
         {activeTab === 'security' ? renderSecurityTab() : null}
         {activeTab === 'notifications' ? renderNotificationsTab() : null}
+        {activeTab === 'system' ? renderSystemTab() : null}
       </div>
     </div>
   )

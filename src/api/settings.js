@@ -17,6 +17,11 @@ export const settingsApi = {
 
   getNotificationSettings: () => api.get('/settings/notifications'),
   updateNotificationSettings: (payload) => api.put('/settings/notifications', payload),
+  // System settings (admin)
+  getSystemSettings: () => api.get('/admin/system'),
+  upsertSystemSetting: (key, value) => api.put(`/admin/system/${encodeURIComponent(key)}`, { value }),
+  createSystemSetting: (payload) => api.post('/admin/system', payload),
+  deleteSystemSetting: (key) => api.del(`/admin/system/${encodeURIComponent(key)}`),
 }
 
 export default settingsApi
