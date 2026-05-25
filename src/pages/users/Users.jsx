@@ -147,6 +147,7 @@ function FilterSelectModal({ isOpen, onClose, onApplyFilter }) {
 function EditUserModal({ user, onClose, onSaved }) {
   const [form, setForm] = useState(user || {})
   const [plans, setPlans] = useState([])
+  const [roles, setRoles] = useState([])
   const [loadingPlans, setLoadingPlans] = useState(false)
 
   useEffect(() => {
@@ -159,20 +160,25 @@ function EditUserModal({ user, onClose, onSaved }) {
   }, [user])
 
   useEffect(() => {
-    const loadPlans = async () => {
+    const loadMeta = async () => {
       try {
         setLoadingPlans(true)
-        const data = await api.get('/v1/subscription-plans')
-        setPlans(Array.isArray(data) ? data : [])
+        const [plansData, rolesData] = await Promise.all([
+          api.get('/v1/subscription-plans'),
+          api.get('/admin/roles'),
+        ])
+        setPlans(Array.isArray(plansData) ? plansData : [])
+        setRoles(Array.isArray(rolesData) ? rolesData : [])
       } catch (error) {
         console.error(error)
         setPlans([])
+        setRoles([])
       } finally {
         setLoadingPlans(false)
       }
     }
 
-    if (user) loadPlans()
+    if (user) loadMeta()
   }, [user])
 
   const save = async () => {
@@ -204,6 +210,25 @@ function EditUserModal({ user, onClose, onSaved }) {
             </div>
           </div>
           <div className="modal-form-grid">
+            <div className="modal-form-group">
+              <label className="form-label">Role</label>
+              <select
+                value={form.role || 'user'}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                className="form-input"
+                disabled={loadingPlans}
+              >
+                {roles.length === 0 ? (
+                  <option value="user">user</option>
+                ) : (
+                  roles.map((role) => (
+                    <option key={role._id} value={role.name}>
+                      {role.displayName || role.name} ({role.name})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
             <div className="modal-form-group">
               <label className="form-label">Gói dịch vụ</label>
               <select

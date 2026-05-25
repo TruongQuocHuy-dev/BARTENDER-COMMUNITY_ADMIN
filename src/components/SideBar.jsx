@@ -76,6 +76,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
           children: [
             { path: "/users", label: "Nguoi dung", icon: Users },
             { path: "/users/admin", label: "Quan tri vien", icon: ShieldAlert },
+            { path: "/users/roles", label: "Roles", icon: ShieldAlert },
           ],
         },
         { path: "/notifications", label: "Thong bao", icon: Bell },

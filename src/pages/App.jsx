@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext'
 import Dashboard from "./dashboard/Dashboard"
 import Users from "./users/Users"
 import AdminUsers from "./users/AdminUsers"
+import Roles from "./users/Roles"
 import Categories from "./categories/Categories"
 import CategoryDetail from "./categories/CategoryDetail"
 import Recipes from "./recipes/Recipes"
@@ -86,6 +87,7 @@ export default function App() {
         <Route path="/" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
         <Route path="/users" element={<ProtectedLayout><Users /></ProtectedLayout>} />
         <Route path="/users/admin" element={<ProtectedLayout><AdminUsers /></ProtectedLayout>} />
+        <Route path="/users/roles" element={<ProtectedLayout><Roles /></ProtectedLayout>} />
         <Route path="/categories" element={<ProtectedLayout><Categories /></ProtectedLayout>} />
         <Route path="/categories/:id" element={<ProtectedLayout><CategoryDetail /></ProtectedLayout>} />
         <Route path="/recipes" element={<ProtectedLayout><Recipes /></ProtectedLayout>} />
