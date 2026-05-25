@@ -17,6 +17,7 @@ import Reports from "./reports/Reports"
 import Notifications from "./notifications/Notifications"
 import Audits from "./audits/Audits"
 import PaymentMethods from "./payment-methods/PaymentMethods"
+import Payments from "./payments/Payments"
 import Profile from "./profile/Profile"
 import Settings from "./settings/Settings"
 import Login from "./auth/Login"
@@ -95,6 +96,7 @@ export default function App() {
         <Route path="/audits" element={<ProtectedLayout><Audits /></ProtectedLayout>} />
         <Route path="/notifications" element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
         <Route path="/payment-methods" element={<ProtectedLayout><PaymentMethods /></ProtectedLayout>} />
+        <Route path="/payments" element={<ProtectedLayout><Payments /></ProtectedLayout>} />
         <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
         <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
       </Routes>

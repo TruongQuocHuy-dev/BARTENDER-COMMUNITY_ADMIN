@@ -4,26 +4,33 @@ const API_BASE = String(envApiBase || windowApiBase || 'http://localhost:8080/ap
 
 const getToken = () => localStorage.getItem('admin_token')
 
-const fetchJson = async (url, opts = {}) => {
-  const headers = opts.headers || {}
+const buildUrl = (url, params) => {
+  let finalUrl = url
+  if (params && typeof params === 'object') {
+    const qs = new URLSearchParams()
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && String(v).length) qs.append(k, v)
+    })
+    const qsStr = qs.toString()
+    if (qsStr) finalUrl += (finalUrl.includes('?') ? '&' : '?') + qsStr
+  }
+  return finalUrl
+}
+
+export const requestRaw = async (url, opts = {}) => {
+  const headers = { ...(opts.headers || {}) }
   if (!headers['Content-Type'] && !(opts.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json'
   }
   const token = getToken()
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  // Support simple params for GET queries
-  let finalUrl = url
-  if (opts.params && typeof opts.params === 'object') {
-    const qs = new URLSearchParams()
-    Object.entries(opts.params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && String(v).length) qs.append(k, v)
-    })
-    const qsStr = qs.toString()
-    if (qsStr) finalUrl += (finalUrl.includes('?') ? '&' : '?') + qsStr
-  }
+  const finalUrl = buildUrl(url, opts.params)
+  return fetch(API_BASE + finalUrl, { ...opts, headers })
+}
 
-  const res = await fetch(API_BASE + finalUrl, { ...opts, headers })
+const fetchJson = async (url, opts = {}) => {
+  const res = await requestRaw(url, opts)
   const responseText = await res.text()
 
   if (!res.ok) {
@@ -66,6 +73,7 @@ export const api = {
   put: (path, body) => fetchJson(path, { method: 'PUT', body: body instanceof FormData ? body : JSON.stringify(body) }),
   patch: (path, body) => fetchJson(path, { method: 'PATCH', body: body instanceof FormData ? body : JSON.stringify(body) }),
   del: (path) => fetchJson(path, { method: 'DELETE' }),
+  requestRaw,
 }
 
 export default api

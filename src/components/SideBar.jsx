@@ -81,6 +81,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
         { path: "/notifications", label: "Thong bao", icon: Bell },
         { path: "/audits", label: "Nhật ký", icon: FileText },
         { path: "/settings", label: "Cai dat", icon: Settings },
+        { path: "/payments", label: "Giao dịch", icon: DollarSign },
         { path: "/payment-methods", label: "Goi thanh toan", icon: CreditCard },
       ],
     },
