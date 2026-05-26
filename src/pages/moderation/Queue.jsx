@@ -235,30 +235,32 @@ export default function ModerationQueue() {
         </article>
       </section>
 
-      <section className="panel moderation-toolbar-panel">
-        <div className="moderation-toolbar-grid">
-          <FormSearchField
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Tìm theo tên, danh mục, lý do..."
-            icon={FiSearch}
-          />
-          <FormSelectField value={visibility} onChange={(event) => setVisibility(event.target.value)} options={FILTER_OPTIONS} />
-          <FormSelectField value={status} onChange={(event) => setStatus(event.target.value)} options={STATUS_OPTIONS} />
-        </div>
+      <section className="panel">
+        <div className="search-filter-bar moderation-toolbar-panel">
+          <div className="moderation-toolbar-grid">
+            <FormSearchField
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Tìm theo tên, danh mục, lý do..."
+              icon={FiSearch}
+            />
+            <FormSelectField value={visibility} onChange={(event) => setVisibility(event.target.value)} options={FILTER_OPTIONS} />
+            <FormSelectField value={status} onChange={(event) => setStatus(event.target.value)} options={STATUS_OPTIONS} />
+          </div>
 
-        <div className="moderation-bulk-panel">
-          <FormSelectField value={bulkAction} onChange={(event) => setBulkAction(event.target.value)} options={BULK_OPTIONS} />
-          <input
-            type="text"
-            className="text-input"
-            value={bulkReason}
-            onChange={(event) => setBulkReason(event.target.value)}
-            placeholder="Lý do cho bulk action"
-          />
-          <button type="button" className="btn btn-primary" onClick={runBulkAction} disabled={!selectedIds.length || loading}>
-            Áp dụng cho {selectedIds.length} mục
-          </button>
+          <div className="moderation-bulk-panel">
+            <FormSelectField value={bulkAction} onChange={(event) => setBulkAction(event.target.value)} options={BULK_OPTIONS} />
+            <input
+              type="text"
+              className="text-input"
+              value={bulkReason}
+              onChange={(event) => setBulkReason(event.target.value)}
+              placeholder="Lý do cho bulk action"
+            />
+            <button type="button" className="btn btn-primary" onClick={runBulkAction} disabled={!selectedIds.length || loading}>
+              Áp dụng cho {selectedIds.length} mục
+            </button>
+          </div>
         </div>
       </section>
 
@@ -271,8 +273,9 @@ export default function ModerationQueue() {
             message="Không có mục nào trong queue. Thử đổi bộ lọc hoặc làm mới dữ liệu."
           />
         ) : (
-          <div className="table-responsive">
-            <table className="data-table moderation-table">
+          <div className="table-section">
+            <div className="table-responsive">
+              <table className="data-table moderation-table">
               <thead>
                 <tr>
                   <th>
@@ -343,6 +346,7 @@ export default function ModerationQueue() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
