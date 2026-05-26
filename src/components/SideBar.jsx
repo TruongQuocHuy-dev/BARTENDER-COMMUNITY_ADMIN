@@ -61,6 +61,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
       title: "Quan ly noi dung",
       items: [
         { path: "/recipes", label: "Cong thuc", icon: Utensils },
+        { path: "/moderation", label: "Moderation", icon: ShieldAlert },
         { path: "/categories", label: "Danh muc", icon: FolderOpen },
         { path: "/posts", label: "Bai viet", icon: FileText },
         { path: "/banners", label: "Quang cao", icon: ImageIcon },

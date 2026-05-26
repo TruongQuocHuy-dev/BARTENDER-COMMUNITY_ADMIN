@@ -15,6 +15,7 @@ import Recipes from "./recipes/Recipes"
 import Banners from "./banners/Banners"
 import Posts from "./posts/Posts"
 import Reports from "./reports/Reports"
+import ModerationQueue from "./moderation/Queue"
 import Notifications from "./notifications/Notifications"
 import Audits from "./audits/Audits"
 import PaymentMethods from "./payment-methods/PaymentMethods"
@@ -93,6 +94,7 @@ export default function App() {
         <Route path="/recipes" element={<ProtectedLayout><Recipes /></ProtectedLayout>} />
         <Route path="/banners" element={<ProtectedLayout><Banners /></ProtectedLayout>} />
         <Route path="/posts" element={<ProtectedLayout><Posts /></ProtectedLayout>} />
+        <Route path="/moderation" element={<ProtectedLayout><ModerationQueue /></ProtectedLayout>} />
         <Route path="/reports" element={<ProtectedLayout><Reports /></ProtectedLayout>} />
         <Route path="/reports/:section" element={<ProtectedLayout><Reports /></ProtectedLayout>} />
         <Route path="/audits" element={<ProtectedLayout><Audits /></ProtectedLayout>} />
