@@ -52,7 +52,7 @@ export default function MainLayout() {
           </List>
         </Box>
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Box component="main" className="admin-page" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default', minHeight: '100vh' }}>
         <Toolbar />
         {/* Nội dung của các trang sẽ được render ở đây */}
         <Outlet />
