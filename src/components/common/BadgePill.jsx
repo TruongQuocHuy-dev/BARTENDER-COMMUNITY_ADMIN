@@ -8,7 +8,11 @@ export default function BadgePill({ label, tone = 'neutral', icon }) {
       const Icon = icon
       return <Icon size={14} />
     }
-    return <span className="common-badge-icon">{icon}</span>
+    if (typeof icon === 'object') {
+      return React.createElement(icon, { size: 14 })
+    }
+
+    return <span className="common-badge-icon">{String(icon)}</span>
   }
 
   return (

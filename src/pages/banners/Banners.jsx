@@ -220,7 +220,7 @@ export default function Banners() {
   }
 
   return (
-    <div className="admin-page">
+    <div className="admin-page banners-page">
       <PageHeader
         title="QUẢN LÝ QUẢNG CÁO"
         subtitle={`Hiển thị ${paginatedItems.length} / ${filtered.length} banners`}
@@ -232,7 +232,7 @@ export default function Banners() {
         )} />
 
       {/* --- Search Bar --- */}
-      <div className="search-filter-bar bg-white p-4 rounded-lg shadow-sm mb-6 border border-gray-100"
+      <div className="search-filter-bar banners-toolbar"
         style={{
           display: 'flex',
           width: '100%',
@@ -285,10 +285,10 @@ export default function Banners() {
       </div>
 
       {/* --- Banners Table --- */}
-      <div className="table-section bg-white p-4 rounded-lg shadow-md overflow-x-auto">
+      <div className="table-container banners-table-container">
         <table className="table banners-table">
           <thead>
-            <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+            <tr>
               <th style={tableHeaderStyle}>Tiêu đề</th>
               <th style={tableHeaderStyle}>Hình ảnh</th>
               <th style={tableHeaderStyle}>Nổi bật</th>
@@ -299,7 +299,7 @@ export default function Banners() {
           </thead>
           <tbody>
             {paginatedItems.map(b => (
-              <tr key={b._id} style={{ borderBottom: '1px solid #eee' }}>
+              <tr key={b._id}>
                 <td style={tableCellStyle} className="font-medium">{b.title}</td>
                 <td style={tableCellStyle}>
                   {b.imageUrl && (
