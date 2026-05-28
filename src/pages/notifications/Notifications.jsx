@@ -142,15 +142,19 @@ export default function Notifications() {
         subtitle={`${notifications.length} thong bao • ${unreadCount} chua doc`}
         icon={<BellRing size={24} />}
         actions={
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={markAllRead}
-            disabled={unreadCount === 0}
-          >
-            <CheckCheck size={16} />
-            Danh dau tat ca da doc
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <a className="btn btn-secondary" href="/notifications/compose">Compose</a>
+            <a className="btn btn-outline" href="/notifications/campaigns">Campaigns</a>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={markAllRead}
+              disabled={unreadCount === 0}
+            >
+              <CheckCheck size={16} />
+              Danh dau tat ca da doc
+            </button>
+          </div>
         }
       />
 

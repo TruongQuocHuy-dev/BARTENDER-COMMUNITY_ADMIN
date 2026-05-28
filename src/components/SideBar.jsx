@@ -80,11 +80,35 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
             { path: "/users/roles", label: "Roles", icon: ShieldAlert },
           ],
         },
-        { path: "/notifications", label: "Thong bao", icon: Bell },
+        {
+          path: "/notifications",
+          label: "Thong bao",
+          icon: Bell,
+          children: [
+            { path: "/notifications", label: "Hoạt động", icon: FileText },
+            { path: "/notifications/compose", label: "Soạn tin", icon: ChevronRight },
+            { path: "/notifications/campaigns", label: "Chiến dịch", icon: BarChart3 },
+          ],
+        },
         { path: "/audits", label: "Nhật ký", icon: FileText },
-        { path: "/settings", label: "Cai dat", icon: Settings },
-        { path: "/payments", label: "Giao dịch", icon: DollarSign },
-        { path: "/payment-methods", label: "Goi thanh toan", icon: CreditCard },
+        {
+          path: "/settings",
+          label: "Cai dat",
+          icon: Settings,
+          children: [
+            { path: "/settings", label: "Cài đặt hệ thống", icon: Settings },
+            { path: "/users/roles", label: "Vai trò", icon: ShieldAlert },
+          ],
+        },
+        {
+          path: "/payments",
+          label: "Giao dịch",
+          icon: DollarSign,
+          children: [
+            { path: "/payments", label: "Giao dịch", icon: DollarSign },
+            { path: "/payment-methods", label: "Phương thức thanh toán", icon: CreditCard },
+          ],
+        },
       ],
     },
   ]

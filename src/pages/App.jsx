@@ -17,6 +17,9 @@ import Posts from "./posts/Posts"
 import Reports from "./reports/Reports"
 import ModerationQueue from "./moderation/Queue"
 import Notifications from "./notifications/Notifications"
+import Compose from "./notifications/Compose"
+import Campaigns from "./notifications/Campaigns"
+import CampaignDetail from "./notifications/CampaignDetail"
 import Audits from "./audits/Audits"
 import PaymentMethods from "./payment-methods/PaymentMethods"
 import Payments from "./payments/Payments"
@@ -99,6 +102,9 @@ export default function App() {
         <Route path="/reports/:section" element={<ProtectedLayout><Reports /></ProtectedLayout>} />
         <Route path="/audits" element={<ProtectedLayout><Audits /></ProtectedLayout>} />
         <Route path="/notifications" element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
+        <Route path="/notifications/compose" element={<ProtectedLayout><Compose /></ProtectedLayout>} />
+        <Route path="/notifications/campaigns" element={<ProtectedLayout><Campaigns /></ProtectedLayout>} />
+        <Route path="/notifications/campaigns/:id" element={<ProtectedLayout><CampaignDetail /></ProtectedLayout>} />
         <Route path="/payment-methods" element={<ProtectedLayout><PaymentMethods /></ProtectedLayout>} />
         <Route path="/payments" element={<ProtectedLayout><Payments /></ProtectedLayout>} />
         <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
