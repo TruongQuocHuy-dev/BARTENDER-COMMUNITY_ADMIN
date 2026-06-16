@@ -1,5 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { BellRing, CheckCheck, Search } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  BellRing,
+  CheckCheck,
+  Search,
+  Plus,
+  Megaphone,
+  UserPlus,
+  Heart,
+  MessageSquare,
+  BookOpen,
+  FileText,
+  Check,
+  Clock,
+  Eye,
+  EyeOff
+} from "lucide-react"
 import PageHeader from "../../components/PageHeader"
 import FormSearchField from "../../components/common/FormSearchField"
 import FormSelectField from "../../components/common/FormSelectField"
@@ -12,26 +29,31 @@ const typeConfig = {
     title: "Có người theo dõi mới",
     type: "info",
     tone: "info",
+    icon: UserPlus,
   },
   new_like: {
     title: "Nội dung vừa được thích",
     type: "success",
     tone: "success",
+    icon: Heart,
   },
   new_comment: {
     title: "Có bình luận mới",
     type: "warning",
     tone: "warning",
+    icon: MessageSquare,
   },
   new_recipe: {
     title: "Có công thức mới",
     type: "info",
     tone: "info",
+    icon: BookOpen,
   },
   new_post: {
     title: "Có bài viết mới",
     type: "info",
     tone: "info",
+    icon: FileText,
   },
 }
 
@@ -43,13 +65,14 @@ const toneByType = {
 }
 
 const labelByType = {
-  warning: "Can xu ly",
-  success: "He thong",
-  info: "Thong tin",
-  danger: "Canh bao",
+  warning: "Cần xử lý",
+  success: "Hệ thống",
+  info: "Thông tin",
+  danger: "Cảnh báo",
 }
 
 export default function Notifications() {
+  const navigate = useNavigate()
   const [notifications, setNotifications] = useState([])
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -73,7 +96,12 @@ export default function Notifications() {
           : []
 
       const mapped = items.map((activity) => {
-        const config = typeConfig[activity.type] || { title: "Thông báo hệ thống", type: "info", tone: "info" }
+        const config = typeConfig[activity.type] || {
+          title: "Thông báo hệ thống",
+          type: "info",
+          tone: "info",
+          icon: BellRing
+        }
         const actorName = activity.actor?.fullName || activity.actor?.username || "Hệ thống"
         const description = activity.message || `${actorName} đã tạo một thông báo mới.`
 
@@ -83,8 +111,9 @@ export default function Notifications() {
           description,
           time: activity.createdAt ? new Date(activity.createdAt).toLocaleString("vi-VN") : "Vừa xong",
           unread: !activity.read,
-          type: config.type,
+          type: activity.type,
           tone: config.tone,
+          icon: config.icon,
         }
       })
 
@@ -138,38 +167,82 @@ export default function Notifications() {
   return (
     <div className="admin-page notification-page">
       <PageHeader
-        title="THONG BAO HE THONG"
-        subtitle={`${notifications.length} thong bao • ${unreadCount} chua doc`}
+        title="Thông báo hệ thống"
+        subtitle={`${notifications.length} thông báo • ${unreadCount} chưa đọc`}
         icon={<BellRing size={24} />}
         actions={
-          <div style={{ display: 'flex', gap: 8 }}>
-            <a className="btn btn-secondary" href="/notifications/compose">Compose</a>
-            <a className="btn btn-outline" href="/notifications/campaigns">Campaigns</a>
+          <div style={{ display: 'flex', gap: 10 }}>
             <button
               type="button"
-              className="btn btn-primary"
+              className="button-secondary"
+              onClick={() => navigate("/notifications/compose")}
+            >
+              <Plus size={16} />
+              Soạn chiến dịch
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => navigate("/notifications/campaigns")}
+            >
+              <Megaphone size={16} />
+              Chiến dịch
+            </button>
+            <button
+              type="button"
+              className="button-primary"
               onClick={markAllRead}
               disabled={unreadCount === 0}
             >
               <CheckCheck size={16} />
-              Danh dau tat ca da doc
+              Đánh dấu tất cả đã đọc
             </button>
           </div>
         }
       />
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
           {error}
         </div>
       )}
+
+      {/* Metrics Row */}
+      <div className="notification-stats-grid">
+        <div className="report-summary-card tone-blue">
+          <div className="summary-card-head">
+            <span className="summary-card-icon"><BellRing size={14} /></span>
+            <span>Tổng thông báo</span>
+          </div>
+          <h3>{notifications.length}</h3>
+          <p>Tổng số thông báo hệ thống đã ghi nhận</p>
+        </div>
+
+        <div className="report-summary-card tone-amber">
+          <div className="summary-card-head">
+            <span className="summary-card-icon"><EyeOff size={14} /></span>
+            <span>Chưa đọc</span>
+          </div>
+          <h3>{unreadCount}</h3>
+          <p>Số lượng thông báo mới đang chờ xử lý</p>
+        </div>
+
+        <div className="report-summary-card tone-green">
+          <div className="summary-card-head">
+            <span className="summary-card-icon"><Eye size={14} /></span>
+            <span>Đã đọc</span>
+          </div>
+          <h3>{notifications.length - unreadCount}</h3>
+          <p>Các thông báo đã được xem xét</p>
+        </div>
+      </div>
 
       <div className="search-filter-bar notification-toolbar">
         <div style={{ flex: 2, minWidth: 0 }}>
           <FormSearchField
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Tim theo tieu de hoac noi dung thong bao"
+            placeholder="Tìm theo tiêu đề hoặc nội dung thông báo..."
             icon={Search}
           />
         </div>
@@ -179,9 +252,9 @@ export default function Notifications() {
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
             options={[
-              { value: "all", label: "Tat ca" },
-              { value: "unread", label: "Chua doc" },
-              { value: "read", label: "Da doc" },
+              { value: "all", label: "Tất cả trạng thái" },
+              { value: "unread", label: "Chưa đọc" },
+              { value: "read", label: "Đã đọc" },
             ]}
           />
         </div>
@@ -189,47 +262,76 @@ export default function Notifications() {
 
       <section className="notification-list-page">
         {loading ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">
-            Đang tải thông báo...
+          <div className="rounded-xl border border-slate-100 bg-white p-12 text-center text-sm text-slate-500 shadow-sm flex flex-col items-center justify-center gap-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <span>Đang tải danh sách thông báo từ hệ thống...</span>
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState message="Khong co thong bao phu hop voi bo loc hien tai." />
+          <EmptyState message="Không tìm thấy thông báo nào phù hợp với bộ lọc." />
         ) : (
-          filtered.map((item) => (
-            <article
-              className={`notification-row ${item.unread ? "unread" : ""}`}
-              key={item.id}
-            >
-              <div className="notification-row-main">
-                <div className="notification-row-head">
-                  <h3>{item.title}</h3>
-                  <BadgePill
-                    label={labelByType[item.type] || "Thong bao"}
-                    tone={toneByType[item.type] || "neutral"}
-                  />
-                </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <AnimatePresence mode="popLayout">
+              {filtered.map((item, index) => {
+                const NotiIcon = item.icon || BellRing
+                const tone = toneByType[item.type] || "info"
+                return (
+                  <motion.article
+                    className={`notification-row ${item.unread ? "unread" : ""}`}
+                    key={item.id || index}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.3) }}
+                  >
+                    <div className={`notification-row-icon ${tone}`}>
+                      <NotiIcon size={20} />
+                    </div>
 
-                <p>{item.description}</p>
+                    <div className="notification-row-main">
+                      <div className="notification-row-head">
+                        <h3>{item.title}</h3>
+                        <BadgePill
+                          label={labelByType[item.type] || "Thông báo"}
+                          tone={item.tone || "neutral"}
+                        />
+                      </div>
 
-                <div className="notification-row-meta">
-                  <span>{item.time}</span>
-                  <span>{item.unread ? "Chua doc" : "Da doc"}</span>
-                </div>
-              </div>
+                      <p>{item.description}</p>
 
-              {item.unread && (
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => markAsRead(item.id)}
-                >
-                  Danh dau da doc
-                </button>
-              )}
-            </article>
-          ))
+                      <div className="notification-row-meta">
+                        <span>
+                          <Clock size={13} />
+                          {item.time}
+                        </span>
+                        <span>
+                          {item.unread ? (
+                            <span style={{ color: "var(--warning-color)", fontWeight: 700 }}>Chưa đọc</span>
+                          ) : (
+                            <span style={{ color: "var(--success-color)" }}>Đã đọc</span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {item.unread && (
+                      <button
+                        type="button"
+                        className="button-secondary btn-sm"
+                        onClick={() => markAsRead(item.id)}
+                        style={{ padding: "6px 12px", display: "inline-flex", gap: 6 }}
+                      >
+                        <Check size={14} />
+                        Đọc
+                      </button>
+                    )}
+                  </motion.article>
+                )
+              })}
+            </AnimatePresence>
+          </div>
         )}
       </section>
     </div>
   )
 }
+
